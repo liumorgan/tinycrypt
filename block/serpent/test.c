@@ -56,8 +56,8 @@ void dump_hex (char *s, uint8_t bin[], int len)
 
 int main (void)
 {
-  uint8_t ct1[32], pt1[32], pt2[32], key[64];
-  int klen, plen, clen, i, j;
+  uint8_t ct1[32], pt1[32], key[64];
+  int plen, clen, i, j;
   serpent_key skey;
   serpent_blk ct2;
   uint32_t *p;
@@ -67,7 +67,7 @@ int main (void)
   for (i=0; i<sizeof(keys)/sizeof(char*); i++) {
     clen=hex2bin (ct1, cipher[i]);
     plen=hex2bin (pt1, plain[i]);
-    klen=hex2bin (key, keys[i]);
+    hex2bin (key, keys[i]);
   
     // set key
     memset (&skey, 0, sizeof (skey));

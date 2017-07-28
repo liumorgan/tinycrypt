@@ -24,8 +24,8 @@ rc5_tv tv[2]=
 };
 
 size_t hex2bin (void *bin, char hex[]) {
-  size_t len, i;
-  int x;
+  size_t  len, i;
+  int     x;
   uint8_t *p=(uint8_t*)bin;
   
   len = strlen (hex);
@@ -49,7 +49,7 @@ size_t hex2bin (void *bin, char hex[]) {
 
 int main (int argc, char *argv[])
 {
-  int i, e;
+  int     i, e;
   RC5_CTX ctx;
   uint8_t pt1[8], pt2[8], ct1[8], ct2[8], key[16];
   
@@ -59,14 +59,19 @@ int main (int argc, char *argv[])
     hex2bin (pt1, tv[i].pt);
     hex2bin (ct1, tv[i].ct);
     
-    rc5_setkeyx (&ctx, key);
-    rc5_cryptx (&ctx, pt1, ct2, RC5_ENCRYPT);
+    rc5_setkey (&ctx, key);
+    rc5_crypt (&ctx, pt1, ct2, RC5_ENCRYPT);
+
+    for (i=0; i<8; i++) printf (" %02x", ct2[i]);  
     
     e=memcmp (ct1, ct2, RC5_BLK_LEN);
+
     printf ("\n\nRC5 encryption test #%i %s", 
       (i+1), e==0?"passed":"failed");
+      
+    rc5_crypt (&ctx, ct2, pt2, RC5_DECRYPT);
 
-    rc5_cryptx (&ctx, ct2, pt2, RC5_DECRYPT);
+    for (i=0; i<8; i++) printf (" %02x", pt2[i]);  
     
     e=memcmp (pt1, pt2, RC5_BLK_LEN);
     printf ("\nRC5 decryption test #%i %s", 

@@ -40,11 +40,9 @@ int main(int argc, char **argv)
 		0x5A, 0x46, 0x8D, 0x42, 0xB9, 0xD4, 0xED, 0xCD
 	};
 	
-	int i, j, n;
+	int       i;
 	kuz_key_t key;
-	w128_t x;
-	uint32_t buf[0x100];
-	clock_t tim;
+	w128_t    x;
 
 	printf("Self-test:\n");		
 	kuz_setkey(&key, testvec_key);	
@@ -64,7 +62,7 @@ int main(int argc, char **argv)
 	printf("CT\t=");
 	print_w128(&x);
 
-	for (i = 0; i < 16; i++) {
+	for (i=0; i<16; i++) {
 		if (testvec_ct[i] != x.b[i]) {
 			fprintf(stderr, "Encryption self-test failure.\n");
 			return -1;
@@ -77,7 +75,7 @@ int main(int argc, char **argv)
 	printf("PT\t=");
 	print_w128(&x);
 	
-	for (i = 0; i < 16; i++) {
+	for (i=0; i<16; i++) {
 		if (testvec_pt[i] != x.b[i]) {
 			fprintf(stderr, "Decryption self-test failure.\n");
 			return -2;

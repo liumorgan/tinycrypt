@@ -42,101 +42,101 @@ uint8_t sub_byte(uint8_t x)
 #ifndef SINGLE
 
 void present128_setkey(present_ctx *ctx, void *key) {
-  w64_t hi, lo, t;
-  int   rnd;
+    w64_t hi, lo, t;
+    int   rnd;
 
-  lo.q = ((uint64_t*)key)[0];
-  hi.q = ((uint64_t*)key)[1];
-  
-  for (rnd=0; rnd<PRESENT_RNDS; rnd++)
-  {
-    ctx->key[rnd] = hi.q;       
+    lo.q = ((uint64_t*)key)[0];
+    hi.q = ((uint64_t*)key)[1];
+    
+    for (rnd=0; rnd<PRESENT_RNDS; rnd++)
+    {
+      ctx->key[rnd] = hi.q;       
 
-    lo.q   ^= (rnd + rnd) + 2; 
-    t.q     = hi.q;
-    
-    hi.q = (hi.q << 61) | (lo.q >> 3);
-    lo.q = (lo.q << 61) | ( t.q >> 3);
-    
-    hi.q    = ROTL64(hi.q, 8);     
-    hi.b[0] = sub_byte(hi.b[0]);               
-    hi.q    = ROTR64(hi.q, 8);
-  }
+      lo.q   ^= (rnd + rnd) + 2; 
+      t.q     = hi.q;
+      
+      hi.q = (hi.q << 61) | (lo.q >> 3);
+      lo.q = (lo.q << 61) | ( t.q >> 3);
+      
+      hi.q    = ROTL64(hi.q, 8);     
+      hi.b[0] = sub_byte(hi.b[0]);               
+      hi.q    = ROTR64(hi.q, 8);
+    }
 }  
 
 void present128_encrypt(present_ctx *ctx, void *buf) {
-  w64_t p, t;
-  int   i, j, r;
-  
-  p.q = ((uint64_t*)buf)[0];
-  
-  for (i=0; i<PRESENT_RNDS-1; i++) {
-    // apply key whitening
-    p.q ^= ctx->key[i];    
-    // apply non-linear operation
-    // replace 16 nibbles with sbox values    
-    for (j=0; j<8; j++) {  
-      p.b[j] = sub_byte(p.b[j]);
-    }    
-    // apply linear operation
-    // bit permutation
-    t.q = 0;    
-    r   = 0x30201000;    
-    for (j=0; j<64; j++) {
-      // test bit at j'th position and shift left
-      t.q |= ((p.q >> j) & 1) << (r & 255);      
-      r = ROTR32(r+1, 8);
-    }
-    p.q = t.q;
-  }  
-  // post whitening
-  p.q ^= ctx->key[PRESENT_RNDS-1];  
-  ((uint64_t*)buf)[0] = p.q;
+    w64_t p, t;
+    int   i, j, r;
+    
+    p.q = ((uint64_t*)buf)[0];
+    
+    for (i=0; i<PRESENT_RNDS-1; i++) {
+      // apply key whitening
+      p.q ^= ctx->key[i];    
+      // apply non-linear operation
+      // replace 16 nibbles with sbox values    
+      for (j=0; j<8; j++) {  
+        p.b[j] = sub_byte(p.b[j]);
+      }    
+      // apply linear operation
+      // bit permutation
+      t.q = 0;    
+      r   = 0x30201000;    
+      for (j=0; j<64; j++) {
+        // test bit at j'th position and shift left
+        t.q |= ((p.q >> j) & 1) << (r & 255);      
+        r = ROTR32(r+1, 8);
+      }
+      p.q = t.q;
+    }  
+    // post whitening
+    p.q ^= ctx->key[PRESENT_RNDS-1];  
+    ((uint64_t*)buf)[0] = SWAP64(p.q);
 }
 
 #else
   
 void present128_encryptx(void *key, void *buf) {
-  w64_t p, t, k0, k1;
-  int   i, j, r;
-  
-  k0.q = ((uint64_t*)key)[0];
-  k1.q = ((uint64_t*)key)[1];
-  
-  p.q = ((uint64_t*)buf)[0];
-  
-  for (i=0; i<PRESENT_RNDS-1; i++) {
-    // apply key whitening
-    p.q ^= k1.q;    
-    // apply non-linear operation
-    // replace 16 nibbles with sbox values    
-    for (j=0; j<8; j++) {  
-      p.b[j] = sub_byte(p.b[j]);
-    }    
-    // apply linear operation
-    // bit permutation
-    t.q = 0;    
-    r   = 0x30201000;    
+    w64_t p, t, k0, k1;
+    int   i, j, r;
     
-    for (j=0; j<64; j++) {
-      t.q |= ((p.q >> j) & 1) << (r & 255);      
-      r = ROTR32(r+1, 8);
-    }
-    p.q = t.q;
+    k0.q = ((uint64_t*)key)[0];
+    k1.q = ((uint64_t*)key)[1];
     
-    // create next subkey
-    k0.q ^= (i + i) + 2; 
-    t.q   = k1.q;
+    p.q = ((uint64_t*)buf)[0];
+    
+    for (i=0; i<PRESENT_RNDS-1; i++) {
+      // apply key whitening
+      p.q ^= k1.q;    
+      // apply non-linear operation
+      // replace 16 nibbles with sbox values    
+      for (j=0; j<8; j++) {  
+        p.b[j] = sub_byte(p.b[j]);
+      }    
+      // apply linear operation
+      // bit permutation
+      t.q = 0;    
+      r   = 0x30201000;    
+      
+      for (j=0; j<64; j++) {
+        t.q |= ((p.q >> j) & 1) << (r & 255);      
+        r = ROTR32(r+1, 8);
+      }
+      p.q = t.q;
+      
+      // create next subkey
+      k0.q ^= (i + i) + 2; 
+      t.q   = k1.q;
 
-    k1.q = (k1.q << 61) | (k0.q >> 3);
-    k0.q = (k0.q << 61) | ( t.q >> 3);
-    
-    k1.q    = ROTL64(k1.q, 8);     
-    k1.b[0] = sub_byte(k1.b[0]);               
-    k1.q    = ROTR64(k1.q, 8);    
-  }  
-  // post whitening and save
-  ((uint64_t*)buf)[0] = SWAP64((p.q ^ k1.q));
+      k1.q = (k1.q << 61) | (k0.q >> 3);
+      k0.q = (k0.q << 61) | ( t.q >> 3);
+      
+      k1.q    = ROTL64(k1.q, 8);     
+      k1.b[0] = sub_byte(k1.b[0]);               
+      k1.q    = ROTR64(k1.q, 8);    
+    }  
+    // post whitening and save
+    ((uint64_t*)buf)[0] = p.q ^ k1.q;
 }
 
 #endif

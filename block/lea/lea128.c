@@ -29,58 +29,58 @@
   
 #include "lea.h"
 
-#define p0 blk[0]
-#define p1 blk[1]
-#define p2 blk[2]
-#define p3 blk[3]
-
 #ifndef SINGLE
 void lea_setkey(void *key, void *roundKeys)
 {
-  uint32_t *rk;
-  uint32_t k0, k1, k2, k3, i, t;
-  uint32_t td[4]= 
-      {0xc3efe9db, 0x44626b02, 0x79e27c8a, 0x78df30ec};
+    uint32_t *rk;
+    uint32_t k0, k1, k2, k3, i, t;
+    uint32_t td[4]= 
+        {0xc3efe9db, 0x44626b02, 0x79e27c8a, 0x78df30ec};
 
-  rk = (uint32_t*)roundKeys;
-  
-  k0 = ((uint32_t*)key)[0]; k1 = ((uint32_t*)key)[1];
-  k2 = ((uint32_t*)key)[2]; k3 = ((uint32_t*)key)[3];
-  
-  td[1] = ROTL32(td[1], 1);
-  td[2] = ROTL32(td[2], 2);
-  td[3] = ROTL32(td[3], 3);
-  
-  for (i=0; i<LEA128_RNDS; i++, rk += 4) {
-    t         = td[i & 3];
-    td[i & 3] = ROTL32(t, 4);
+    rk = (uint32_t*)roundKeys;
     
-    k0 = ROTL32(k0 + t, 1);
-    k1 = ROTL32(k1 + ROTL32(t, 1),  3);
-    k2 = ROTL32(k2 + ROTL32(t, 2),  6);
-    k3 = ROTL32(k3 + ROTL32(t, 3), 11);
+    k0 = ((uint32_t*)key)[0]; k1 = ((uint32_t*)key)[1];
+    k2 = ((uint32_t*)key)[2]; k3 = ((uint32_t*)key)[3];
+    
+    td[1] = ROTL32(td[1], 1);
+    td[2] = ROTL32(td[2], 2);
+    td[3] = ROTL32(td[3], 3);
+    
+    for (i=0; i<LEA128_RNDS; i++, rk += 4) {
+      t         = td[i & 3];
+      td[i & 3] = ROTL32(t, 4);
+      
+      k0 = ROTL32(k0 + t, 1);
+      k1 = ROTL32(k1 + ROTL32(t, 1),  3);
+      k2 = ROTL32(k2 + ROTL32(t, 2),  6);
+      k3 = ROTL32(k3 + ROTL32(t, 3), 11);
 
-    rk[0] = k0; rk[1] = k1;
-    rk[2] = k2; rk[3] = k3;
-  }
+      rk[0] = k0; rk[1] = k1;
+      rk[2] = k2; rk[3] = k3;
+    }
 }
 
 void lea_encrypt(void *roundKeys, void *block)
 {
-  uint32_t* blk = (uint32_t*) block;
-  uint32_t* rk  = (uint32_t*) roundKeys;
-  uint32_t tmp;
-  int8_t i;
-  
-  for (i=0; i<LEA128_RNDS; ++i, rk += 4) {
-    p3 = ROTR32((p2 ^ rk[3]) + (p3 ^ rk[1]), 3);
-    p2 = ROTR32((p1 ^ rk[2]) + (p2 ^ rk[1]), 5);
-    p1 = ROTL32((p0 ^ rk[0]) + (p1 ^ rk[1]), 9);
-    // rotate block 32-bits
-    XCHG(p0, p1);
-    XCHG(p1, p2);
-    XCHG(p2, p3);
-  }
+    uint32_t* blk = (uint32_t*) block;
+    uint32_t* rk  = (uint32_t*) roundKeys;
+    uint32_t  t, b0, b1, b2, b3;
+    int       i;
+    
+    b0 = blk[0]; b1 = blk[1];
+    b2 = blk[2]; b3 = blk[3];
+    
+    for (i=0; i<LEA128_RNDS; i++, rk += 4) {
+      b3 = ROTR32((b2 ^ rk[3]) + (b3 ^ rk[1]), 3);
+      b2 = ROTR32((b1 ^ rk[2]) + (b2 ^ rk[1]), 5);
+      b1 = ROTL32((b0 ^ rk[0]) + (b1 ^ rk[1]), 9);
+      // rotate block 32-bits
+      XCHG(b0, b1);
+      XCHG(b1, b2);
+      XCHG(b2, b3);
+    }
+    blk[0] = b0; blk[1] = b1;
+    blk[2] = b2; blk[3] = b3;
 }
 
 #else

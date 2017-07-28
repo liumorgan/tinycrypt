@@ -30,8 +30,7 @@
 #ifndef RC4_H
 #define RC4_H
 
-#include <stdint.h>
-#include <string.h>
+#include "../../macros.h"
 
 #pragma pack(push, 1)
 typedef struct _RC4_KEY {

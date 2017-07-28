@@ -2,6 +2,8 @@
 // test unit for LEA-128 block cipher
 // odzhan
 
+#include <stdio.h>
+
 #include "lea.h"
 
 uint8_t key[16] = 
@@ -19,18 +21,19 @@ uint8_t cipher[16] =
 int main(void)
 {
   uint8_t  buf[16];
-  int      i, equ;
-  uint32_t subkeys[24*4];
+  int      equ, i;
+  uint32_t subkeys[384];
   
   memcpy (buf, plain, 16);
   
-  //lea_setkey(key, subkeys);
-  //lea_encrypt(subkeys, buf);
-  lea128_encryptx(key, buf);
+  lea_setkey(key, subkeys);
+  lea_encrypt(subkeys, buf);
+  //lea128_encrypt(key, buf);
   
+  for (i=0; i<16; i++) printf ("%02x ", buf[i]);
   equ = memcmp (buf, cipher, 16) == 0;
   
-  printf ("\nEncryption test %s\b", 
+  printf ("\nEncryption test %s\n", 
       equ ? "OK" : "FAILED");
       
   return 0;

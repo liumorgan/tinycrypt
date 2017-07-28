@@ -152,6 +152,7 @@ void sm4_setkey(sm4_ctx *c, const void *key, int enc) {
     }
 }
 
+// swapping bytes *shouldn't* affect the cipher
 
 void sm4_encrypt(sm4_ctx *c, void *buf)
 {
@@ -159,10 +160,8 @@ void sm4_encrypt(sm4_ctx *c, void *buf)
     uint32_t *rk=c->rk;
     uint32_t *x=(uint32_t*)buf;
     
-    x0 = SWAP32(x[0]);
-    x1 = SWAP32(x[1]);
-    x2 = SWAP32(x[2]);
-    x3 = SWAP32(x[3]);
+    x0 = SWAP32(x[0]); x1 = SWAP32(x[1]);
+    x2 = SWAP32(x[2]); x3 = SWAP32(x[3]);
     
     for (i=0; i<32; i++) {
       x0 = F(x0, x1, x2, x3, rk[i]);
@@ -171,9 +170,7 @@ void sm4_encrypt(sm4_ctx *c, void *buf)
       XCHG(x2, x3);
     }
 
-    x[0] = SWAP32(x3);
-    x[1] = SWAP32(x2);
-    x[2] = SWAP32(x1);
-    x[3] = SWAP32(x0);
+    x[0] = SWAP32(x3); x[1] = SWAP32(x2);
+    x[2] = SWAP32(x1); x[3] = SWAP32(x0);
 }
 

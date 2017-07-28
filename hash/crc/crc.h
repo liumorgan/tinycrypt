@@ -30,8 +30,7 @@
 #ifndef CRC_H
 #define CRC_H
 
-#include <stdint.h>
-#include <string.h>
+#include "../../macros.h"
 
 #ifdef __cplusplus
 extern "C" {

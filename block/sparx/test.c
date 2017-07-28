@@ -6,7 +6,9 @@
 
 void print_bytes(char *s, void *p, int len) {
   int i;
+  
   printf("%s : ", s);
+  
   for (i=0; i<len; i++) {
     printf ("%04x ", ((uint16_t*)p)[i]);
   }
@@ -30,7 +32,7 @@ uint16_t cipher[]=
 int main(int argc, char *argv[])
 {
   uint16_t subkeys[40+1][8] = {{0}};
-  int      equ, i, j;
+  int      equ;
   
   print_bytes("PT", plain, 8);
   print_bytes("CT", cipher, 8);

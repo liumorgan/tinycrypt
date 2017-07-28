@@ -64,11 +64,11 @@ int main(void)
     
     memset (&ctx, 0, sizeof (ctx));
     //printf ("\n\nSetting up key for test # %i", (i+1));
-    threefish_setkeyx (&ctx, tv[i].key, tv[i].tweak);
+    threefish_setkey (&ctx, tv[i].key, tv[i].tweak);
     //print_bytes("CTX", &ctx, sizeof(ctx));
     
     //printf ("\nEncrypting plaintext");
-    threefish_encryptx(&ctx, tv[i].input, THREEFISH_ENCRYPT);
+    threefish_encrypt(&ctx, tv[i].input, THREEFISH_ENCRYPT);
   
     //print_bytes("Ciphertext", tv[i].input, 32);
     //print_bytes("Expected", tv[i].result, 32);
@@ -77,7 +77,7 @@ int main(void)
       printf ("\nEncryption OK");
     } else printf("\nEncryption failed");
   
-    threefish_encryptx(&ctx, tv[i].input, THREEFISH_DECRYPT);
+    threefish_encrypt(&ctx, tv[i].input, THREEFISH_DECRYPT);
   
     //print_bytes("Plaintext", tv[i].input, 32);
     //print_bytes("Expected", t, 32);

@@ -26,13 +26,13 @@ uint8_t tv_key[]=
 int main(void)
 {
   sm4_ctx  c;
-  uint32_t i;
+  //uint32_t i;
   int      equ;
   
-  sm4_setkeyx(&c, tv_key, SM4_ENCRYPT);
+  sm4_setkey(&c, tv_key, SM4_ENCRYPT);
   
   //for (i=0; i<1000000; i++) {
-    sm4_encryptx(&c, tv_plain);
+    sm4_encrypt(&c, tv_plain);
   //}
   
   equ = memcmp(tv_cipher, tv_plain, 16)==0;

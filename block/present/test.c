@@ -2,6 +2,9 @@
 // test unit for PRESENT-128
 // odzhan
 
+#include <stdio.h>
+#include <ctype.h>
+
 #include "present.h"
 
 size_t hex2bin (void *bin, char hex[]) {
@@ -39,21 +42,22 @@ void bin2hex (uint8_t dgst[], size_t len)
 }
 
 int test(char inputStr[16], char expectedOutputStr[16], char keyStr[32]) {
-  uint8_t output[8];
-  uint8_t input[8];
-  uint8_t expectedOutput[8];
-  uint8_t key[10];
-  int     i;
+  uint8_t     input[8];
+  uint8_t     expectedOutput[8];
+  uint8_t     key[16];
+  int         i;
+  present_ctx ctx;
   
   hex2bin(input, inputStr);
   hex2bin(expectedOutput, expectedOutputStr);
   hex2bin(key, keyStr);
 
-  present128_encryptx(key, input);
+  present128_setkey(&ctx, key);
+  present128_encrypt(&ctx, input);
 
   for(i = 0; i < 8; i++) {
     if(input[i] != expectedOutput[i]) {
-      printf("%i, %02X, %02X\n", i, input[i], expectedOutput[i]);
+      printf("FAILED : index:%i, %02X != %02X\n", i, input[i], expectedOutput[i]);
       return 0;
     }
   }  

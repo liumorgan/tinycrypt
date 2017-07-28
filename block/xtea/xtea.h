@@ -30,11 +30,7 @@
 #ifndef XTEA_H
 #define XTEA_H
 
-#include <stdint.h>
-#include <string.h>
-#include <stdlib.h>
-
-#define XCHG(x, y) (t) = (x); (x) = (y); (y) = (t);
+#include "../../macros.h"
 
 #ifdef __cplusplus
 extern "C" {

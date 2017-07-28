@@ -30,8 +30,7 @@
 #ifndef LIGHTMAC_H
 #define LIGHTMAC_H
 
-#include <stdint.h>
-#include <string.h>
+#include "../../macros.h"
 
 #define COUNTER_LENGTH       4
 #define TAG_LENGTH           8

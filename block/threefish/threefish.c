@@ -130,7 +130,7 @@ void threefish_encrypt(
 
   if (enc == THREEFISH_DECRYPT) {
     s   = 18;
-    ofs = ~0UL;
+    ofs = ~0L;
     
     // swap rotation constants if
     // decrypting

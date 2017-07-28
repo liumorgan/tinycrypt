@@ -59,7 +59,7 @@ size_t hex2bin (void *bin, char hex[]) {
 
 void run_tests (void)
 {
-  size_t i, plen, clen, klen;
+  int i, plen, klen;
   uint8_t p1[32], p2[32], c1[32], c2[32], k[32];
   RC6_KEY rc6_key;
   
@@ -72,7 +72,7 @@ void run_tests (void)
     memset (k, 0, sizeof (k));
     
     klen=hex2bin (k, test_keys[i]);
-    clen=hex2bin (c1, test_ciphertexts[i]);
+    hex2bin (c1, test_ciphertexts[i]);
     plen=hex2bin (p1, test_plaintexts[i]);
     
     rc6_setkey (&rc6_key, k, klen);

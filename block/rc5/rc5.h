@@ -30,8 +30,7 @@
 #ifndef RC5_H
 #define RC5_H
 
-#include <stdint.h>
-#include <string.h>
+#include "../../macros.h"
 
 #define RC5_ENCRYPT 1
 #define RC5_DECRYPT 0
@@ -56,28 +55,6 @@ typedef union _rc5_blk {
 } rc5_blk;
 #pragma pack(pop)
 
-#define U8V(v)  ((uint8_t)(v)  & 0xFFU)
-#define U16V(v) ((uint16_t)(v) & 0xFFFFU)
-#define U32V(v) ((uint32_t)(v) & 0xFFFFFFFFUL)
-#define U64V(v) ((uint64_t)(v) & 0xFFFFFFFFFFFFFFFFULL)
-
-#define ROTL8(v, n) \
-  (U8V((v) << (n)) | ((v) >> (8 - (n))))
-
-#define ROTL16(v, n) \
-  (U16V((v) << (n)) | ((v) >> (16 - (n))))
-
-#define ROTL32(v, n) \
-  (U32V((v) << (n)) | ((v) >> (32 - (n))))
-
-#define ROTL64(v, n) \
-  (U64V((v) << (n)) | ((v) >> (64 - (n))))
-
-#define ROTR8(v, n) ROTL8(v, 8 - (n))
-#define ROTR16(v, n) ROTL16(v, 16 - (n))
-#define ROTR32(v, n) ROTL32(v, 32 - (n))
-#define ROTR64(v, n) ROTL64(v, 64 - (n))
-
 #ifdef __cplusplus
 extern "C" {
 #endif
@@ -88,11 +65,6 @@ extern "C" {
   void rc5_cryptx (RC5_CTX*, void*, void*, int);
 #ifdef __cplusplus
 }
-#endif
-
-#ifdef USE_ASM
-#define rc5_setkey(x, y) rc6_setkeyx (x, y)
-#define rc5_crypt(w, x, y, z) rc6_cryptx (w, x, y, z)
 #endif
 
 #endif

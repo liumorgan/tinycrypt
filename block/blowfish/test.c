@@ -63,15 +63,15 @@ size_t hex2bin (void *bin, char hex[]) {
 
 void run_tests(void)
 {
-  size_t i, plen, clen, klen;
-  BF_LONG p1[2], c1[2], c2[2], k[32];
+  uint32_t i, clen, klen;
+  uint32_t p1[2], c1[2], c2[2], k[32];
   BF_KEY bf_key;
   
   for (i=0; i<sizeof (test_keys)/sizeof(char*); i++)
   { 
     klen=hex2bin (k, test_keys[i]);
     clen=hex2bin (c1, test_ct[i]);
-    plen=hex2bin (p1, test_pt[i]);
+    hex2bin (p1, test_pt[i]);
     
     bf_setkey (&bf_key, k, klen);
     bf_encrypt (&bf_key, p1, c2);

@@ -30,6 +30,8 @@
 #ifndef POLY1305_H
 #define POLY1305_H
 
+#include "../../macros.h"
+
 #ifdef __cplusplus
 extern "C" {
 #endif

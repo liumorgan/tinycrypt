@@ -30,7 +30,7 @@
 #ifndef MD2_H
 #define MD2_H
 
-#include <stdint.h>
+#include "../../macros.h"
 
 #define MD2_CBLOCK        16
 #define MD2_DIGEST_LENGTH 16

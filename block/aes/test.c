@@ -94,15 +94,15 @@ void bin2scr (void *bin, uint32_t len)
 
 int ecb_test (void)
 {
-  int i, j, plen, clen, klen, fails=0;
+  int i, plen, clen, fails=0;
 
-  aes_blk ct1, ct2, pt1, pt2;
+  aes_blk ct1, pt1, pt2;
   uint8_t key[32];           // 256-bit key
   aes_ctx ctx;
   
   for (i=0; i<sizeof(ecb_keys)/sizeof(char*); i++)
   { 
-    klen=hex2bin (key, ecb_keys[i]);
+    hex2bin (key, ecb_keys[i]);
     clen=hex2bin (ct1.b, ecb_ct[i]);
     plen=hex2bin (pt1.b, ecb_tv[i]);
     

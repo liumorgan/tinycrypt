@@ -2,6 +2,8 @@
 // test unit for chaskey
 // odzhan
 
+#include <stdio.h>
+
 #include "chaskey.h"
 
 uint8_t plain[16]=
@@ -29,10 +31,10 @@ int main(voi)
   
   memcpy(t, plain, 16);
   
-  chas_encryptx(CHASKEY_ENCRYPT, key, t);
+  chas_encrypt(CHASKEY_ENCRYPT, key, t);
   e = memcmp(t, cipher, 16)==0;
   
-  chas_encryptx(CHASKEY_DECRYPT, key, t);
+  chas_encrypt(CHASKEY_DECRYPT, key, t);
   d = memcmp(t, plain, 16)==0;
   
   printf("\nEncryption: %s\nDecryption: %s\n", 
