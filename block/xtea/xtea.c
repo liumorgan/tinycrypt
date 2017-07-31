@@ -31,7 +31,7 @@
 
 void xtea_encrypt(uint32_t rnds, void *key, void *buf) {
     int      i, j;
-    uint32_t x, y, v0, v1, t, sum=0;
+    uint32_t v0, v1, t, sum=0;
     uint32_t *k=(uint32_t*)key;
     uint32_t *v=(uint32_t*)buf;
     

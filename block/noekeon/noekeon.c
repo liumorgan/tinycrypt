@@ -72,7 +72,7 @@ void Round(
   rc1 = rc_tab[rnd];
   rc2 = 0;
   if (enc==NOEKEON_DECRYPT) {
-    XCHG(rc1, rc2, t);
+    XCHG(rc1, rc2);
   }
   
   s[0] ^= rc1;
@@ -90,7 +90,7 @@ void Round(
   s[1] ^= ~((s[3]) | (s[2]));
   s[0] ^=   s[2] & s[1];  
   
-  XCHG(s[0], s[3], t);
+  XCHG(s[0], s[3]);
   
   s[2] ^= s[0] ^ s[1] ^ s[3];
   

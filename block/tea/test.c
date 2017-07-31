@@ -77,7 +77,7 @@ void dump_hex(void *b, int len)
 void enc_test (void)
 {
   int i;
-  tea_blk pt, ct, t;
+  tea_blk pt, ct;
   tea_key key;
   
   printf ("\nRunning Encrypt tests");

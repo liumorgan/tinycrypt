@@ -52,7 +52,7 @@ int main(void)
     memcpy(buf, &xtea_test_pt[i][0], 8);
     memcpy(key, &xtea_test_key[i][0], 16);
     
-    xtea_encryptx(32, key, buf);
+    xtea_encrypt(32, key, buf);
     
     equ = memcmp(buf, &xtea_test_ct[i][0], 8)==0;
     printf ("\nXTEA Test #%i %s", 

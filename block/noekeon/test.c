@@ -2,6 +2,8 @@
 // test unit
 // odzhan
 
+#include <stdio.h>
+
 #include "noekeon.h"
 
 // direct mode test vectors
@@ -51,7 +53,7 @@ void print_bytes(char *s, void *p, int len) {
 
 int main(void)
 {
-  uint8_t       pt1[16], ct[16], pt2[16], key[16], ctx[16];
+  uint8_t       pt1[16], ct[16], pt2[16], ctx[16];
   int           equ;
   
   hex2bin (ct, tv_ct);
@@ -59,14 +61,14 @@ int main(void)
   hex2bin (pt2, tv_pt);
   hex2bin (&ctx, tv_key);
     
-  Noekeonx(&ctx, pt1, NOEKEON_ENCRYPT);
+  Noekeon(&ctx, pt1, NOEKEON_ENCRYPT);
   equ = memcmp (pt1, ct, 16)==0;
 
   printf ("\nEncryption : %s : ",
       equ ? "OK" : "FAILED"); 
   print_bytes("CT", pt1, 16);
   
-  Noekeonx(&ctx, pt1, NOEKEON_DECRYPT);
+  Noekeon(&ctx, pt1, NOEKEON_DECRYPT);
   equ = memcmp (pt1, pt2, 16)==0;
   
   printf ("\nDecryption : %s : ",

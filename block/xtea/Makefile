@@ -1,4 +1,4 @@
 msvc:
-    cl /nologo /O2 /Ot /DTEST blabla.c
+		cl /nologo /O2 /DTEST test.c xtea.c
 all:
-    gcc -DTEST -Wall -O2 -Ot blabla.c -oblabla   
+		gcc -DTEST -Wall -O2 test.c xtea.c -otest	 
