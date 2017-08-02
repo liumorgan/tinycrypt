@@ -112,7 +112,7 @@ void SHA1_Update (SHA1_CTX *c, void *in, uint32_t len) {
   c->len += len;
   
   while (len > 0) {
-    r = MIN(len, SHA1_CBLOCK - idx);
+    r = len >= SHA1_CBLOCK ? SHA1_CBLOCK : len;
     memcpy ((void*)&c->buf.b[idx], p, r);
     if ((idx + r) < SHA1_CBLOCK) break;
     

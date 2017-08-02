@@ -308,29 +308,6 @@ int main (int argc, char *argv[])
   uint8_t  out[32];
   uint8_t  word[64];
   
-  uint8_t rnd[32]=
-{ 0x10, 0x30, 0x95, 0x4d, 0xb4, 0x20, 0xf8, 0x7f,
-  0x1d, 0x81, 0xeb, 0x23, 0xda, 0x19, 0xd9, 0x00,
-  0xb6, 0x54, 0x6e, 0x8a, 0xa0, 0x9b, 0x6f, 0xa2,
-  0x81, 0xc8, 0xe3, 0xed, 0x87, 0x48, 0x59, 0x4e };
-  
-  wchar_t pp[]=L"PermanentPassword\0";
-  wchar_t pwd[]=L"123456789";
-  
-  memset(word, 0, sizeof(word));
-  memcpy (&word[32], rnd, 32);
-  
-  SHA256_Init(&ctx);
-  SHA256_Update(&ctx, word, 64);
-  //SHA256_Update(&ctx, pwd, wcslen(pwd)*2);
-  SHA256_Final(out, &ctx);
-  
-  putchar('\n');
-  for (i=0; i<32; i++) {
-    printf ("%02x", out[i]);
-  }
-  putchar('\n');
-  return 0;
   // for each argument
   for (i=1; i<argc; i++)
   {

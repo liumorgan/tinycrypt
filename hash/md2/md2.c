@@ -143,7 +143,7 @@ void MD2_Update (MD2_CTX *ctx, void *in, uint32_t len)
   memcpy ((void*)&ctx->data.v8[index], (void*)&input[i], len-i);
 }  
 
-uint8_t *PADDING[]=
+char *PADDING[]=
 { "",
   "\001",
   "\002\002",
