@@ -66,6 +66,8 @@ typedef struct _aes_ctx_t {
 extern "C" { 
 #endif
 
+  void aes_enc (aes_ctx*, void*);
+  
   void aes_setkey (aes_ctx*, void*);
   void aes_setkeyx (aes_ctx*, void*);
   
