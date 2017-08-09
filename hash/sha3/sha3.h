@@ -30,7 +30,9 @@
 #ifndef SHA3_H
 #define SHA3_H
 
-#include "../../macros.h"
+#include <stdint.h>
+
+#include "macros.h"
    
 #define SHA3_ROUNDS             24
 #define SHA3_STATE_LEN          25
@@ -76,14 +78,12 @@ extern "C" {
   void SHA3_Update (SHA3_CTX*, void *, uint32_t);
   void SHA3_Final (void*, SHA3_CTX*);
 
+  void SHA3_Initx (SHA3_CTX *, int);
+  void SHA3_Updatex (SHA3_CTX*, void *, uint32_t);
+  void SHA3_Finalx (void*, SHA3_CTX*);
+  
 #ifdef __cplusplus
 }
-#endif
-
-#ifdef USE_ASM
-  #define SHA3_Init(x, y) SHA3_Initx(x, y)
-  #define SHA3_Update(x, y, z) SHA3_Updatex(x, y, z)
-  #define SHA3_Final(x, y) SHA3_Finalx(x, y)
 #endif
 
 #endif
