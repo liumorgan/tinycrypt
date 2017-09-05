@@ -45,16 +45,15 @@ uint8_t gf_mulinv (uint8_t x)
 {
     uint8_t y=x, i;
 
-    if (x)
-    {
+    if (x) {
       // calculate logarithm gen 3
-      for (y=1, i=0; ;i++) {
-        y ^= gf_mul2 (y);
-        if (y==x) break;
+      for (i=1, y=1; i > 0; i++) {
+        y ^= gf_mul2(y);
+        if (y == x) break;
       }
-      i+=2;
+      x = ~i;
       // calculate anti-logarithm gen 3
-      for (y=1; i; i++) {
+      for (i=0, y=1; i < x; i++) {
         y ^= gf_mul2(y);
       }
     }

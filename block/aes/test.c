@@ -107,8 +107,7 @@ int ecb_test (void)
     plen=hex2bin (pt1.b, ecb_tv[i]);
     
     aes_setkey (&ctx, &key);
-    aes_enc (&ctx, &pt1);
-    //aes_encrypt (&ctx, &pt1, AES_ENCRYPT);
+    aes_encrypt (&ctx, &pt1, AES_ENCRYPT);
 
     if (memcmp (ct1.b, pt1.b, clen)==0) {
       printf ("\nEncryption passed test #%i - %08X %08X", 
@@ -116,7 +115,7 @@ int ecb_test (void)
       
       plen=hex2bin (pt2.b, ecb_tv[i]);
       
-      //aes_encrypt (&ctx, &pt1, AES_DECRYPT);
+      aes_encrypt (&ctx, &pt1, AES_DECRYPT);
       
       if (memcmp (pt1.b, pt2.b, plen)==0) {
         printf ("\nDecryption OK!");
