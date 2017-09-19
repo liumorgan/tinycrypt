@@ -30,7 +30,7 @@
 ; -----------------------------------------------
 ; blake2s in x86 assembly
 ;
-; size: 509 bytes
+; size: 497 bytes
 ;
 ; global calls use cdecl convention
 ;
