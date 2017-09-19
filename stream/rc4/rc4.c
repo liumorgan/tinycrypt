@@ -61,7 +61,7 @@ void RC4_set_key (RC4_KEY *c, uint32_t len, void *key)
  * Since RC4 is a stream cypher, this function is used
  * for both encryption and decryption.
  */
-void RC4 (RC4_KEY *c, uint32_t len, void *buf)
+void RC4 (RC4_KEY *c, uint32_t len, void *in, void *out)
 {
   uint32_t i;
   uint8_t  x=(uint8_t)c->x, y=(uint8_t)c->y, j=0, t;
@@ -78,7 +78,7 @@ void RC4 (RC4_KEY *c, uint32_t len, void *buf)
 
     // Encrypt/decrypt next byte
     j = (c->s[x] + c->s[y]) % 256;
-    ((uint8_t*)buf)[i] ^= c->s[j];
+    ((uint8_t*)out)[i] = ((uint8_t*)in)[i] ^ c->s[j];
   }
   c->x = x;
   c->y = y;

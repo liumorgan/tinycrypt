@@ -7,6 +7,7 @@
 #include <stdint.h>
 #include <string.h>
 #include <stdlib.h>
+#include <ctype.h>
 
 #include "rc4.h"
 
@@ -54,11 +55,12 @@ void hexout (char hdr[], void* buf, int len)
   size_t i;
   uint8_t *p=(uint8_t*)buf;
   
-  printf ("\n%s : ", hdr);
+  printf ("%s : ", hdr);
   
   for (i=0; i<len; i++) {
     printf ("%02x", p[i]);
   }
+  putchar('\n');
 }
 
 int hex2bin (void *bin, char hex[]) {
@@ -104,9 +106,9 @@ void run_tests (void)
     RC4 (&ctx, plen, p1, p1);
     
     if (memcmp (c1, p1, clen)==0) {
-      printf ("\nPassed test # %i : plen=%i, keylen=%i-bit", (i+1), plen, klen*8);
+      printf ("Passed test # %i : plen=%i, keylen=%i-bit\n", (i+1), plen, klen*8);
     } else {
-      printf ("\nFailed test # %i : plen=%i, keylen=%i-bit", (i+1), plen, klen*8);
+      printf ("Failed test # %i : plen=%i, keylen=%i-bit", (i+1), plen, klen*8);
       hexout ("required", c1, clen);
       hexout ("result  ",   p1, clen);
     }

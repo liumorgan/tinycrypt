@@ -26,9 +26,12 @@ int main(void)
   
   memcpy (buf, plain, 16);
   
-  lea_setkey(key, subkeys);
-  lea_encrypt(subkeys, buf);
-  //lea128_encrypt(key, buf);
+  #ifndef SINGLE
+    lea_setkey(key, subkeys);
+    lea_encrypt(subkeys, buf);
+  #else  
+    lea128_encrypt(key, buf);
+  #endif  
   
   for (i=0; i<16; i++) printf ("%02x ", buf[i]);
   equ = memcmp (buf, cipher, 16) == 0;

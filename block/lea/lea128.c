@@ -87,6 +87,7 @@ void lea_encrypt(void *roundKeys, void *block)
   
 void lea128_encrypt(void *key, void *block) {
   uint32_t k0, k1, k2, k3, i, t;
+  uint32_t b0, b1, b2, b3;
   uint32_t *blk=(uint32_t*)block;
   uint32_t td[4]= 
       {0xc3efe9db, 0x44626b02, 0x79e27c8a, 0x78df30ec};
@@ -94,6 +95,9 @@ void lea128_encrypt(void *key, void *block) {
   k0 = ((uint32_t*)key)[0]; k1 = ((uint32_t*)key)[1];
   k2 = ((uint32_t*)key)[2]; k3 = ((uint32_t*)key)[3];
   
+  b0 = blk[0]; b1 = blk[1];
+  b2 = blk[2]; b3 = blk[3];
+      
   td[1] = ROTL32(td[1], 1);
   td[2] = ROTL32(td[2], 2);
   td[3] = ROTL32(td[3], 3);
@@ -107,14 +111,16 @@ void lea128_encrypt(void *key, void *block) {
     k2 = ROTL32(k2 + ROTL32(t, 2),  6);
     k3 = ROTL32(k3 + ROTL32(t, 3), 11);
     // encrypt block
-    p3 = ROTR32((p2 ^ k3) + (p3 ^ k1), 3);
-    p2 = ROTR32((p1 ^ k2) + (p2 ^ k1), 5);
-    p1 = ROTL32((p0 ^ k0) + (p1 ^ k1), 9);
+    b3 = ROTR32((b2 ^ k3) + (b3 ^ k1), 3);
+    b2 = ROTR32((b1 ^ k2) + (b2 ^ k1), 5);
+    b1 = ROTL32((b0 ^ k0) + (b1 ^ k1), 9);
     // rotate block 32-bits
-    XCHG(p0, p1);
-    XCHG(p1, p2);
-    XCHG(p2, p3);
+    XCHG(b0, b1);
+    XCHG(b1, b2);
+    XCHG(b2, b3);
   }
+  blk[0] = b0; blk[1] = b1;
+  blk[2] = b2; blk[3] = b3;  
 }
 
 #endif  

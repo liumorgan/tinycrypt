@@ -44,7 +44,7 @@ extern "C" {
 #endif
 
   void RC4_set_key (RC4_KEY*, uint32_t, void*);
-  void RC4 (RC4_KEY*, uint32_t, void*);
+  void RC4 (RC4_KEY*, uint32_t, void*, void*);
 
 #ifdef __cplusplus
 }
