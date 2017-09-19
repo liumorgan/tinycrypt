@@ -37,7 +37,7 @@ void xtea_encrypt(uint32_t rnds, void *key, void *buf) {
     
     v0 = v[0]; v1 = v[1];
     
-    for (i=0; i<64; i++) {
+    for (i=rnds<<1; i>0; i--) {
       t = sum;
       if (i & 1) {
         sum += 0x9E3779B9;

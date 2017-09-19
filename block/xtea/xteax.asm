@@ -30,7 +30,7 @@
 ; -----------------------------------------------
 ; XTEA Block Cipher in x86 assembly (Encryption only)
 ;
-; size: 74 bytes
+; size: 72 bytes
 ;
 ; global calls use cdecl convention
 ;
@@ -59,7 +59,7 @@ _xtea_encryptx:
     lea    esi, [esp+32+4]
     lodsd
     cdq                     ; sum = 0
-    xchg   eax, ecx         ; ecx = rnds
+    lea    ecx, [edx+eax*2] ; ecx = rnds << 1
     lodsd
     xchg   eax, edi         ; edi = key
     lodsd
@@ -70,9 +70,6 @@ _xtea_encryptx:
     lodsd
     xchg   eax, v1
 xtea_enc:
-    push   ecx
-    xor    ecx, ecx
-xtea_l0:
     mov    x, v1             ; x   = v1 << 4
     shl    x, 4
     
@@ -83,7 +80,8 @@ xtea_l0:
     add    x, v1             ; x  += v1;
     
     mov    y, sum            ; y   = sum
-    jecxz  xtea_l1           ; goto xtea_l1 if ecx==0
+    test   cl, 1
+    jz     xtea_l1
     
     add    sum, 0x9E3779B9   ; sum += 0x9E3779B9   
     mov    y, sum     
@@ -97,11 +95,6 @@ xtea_l1:
     
     add    v0, x             ; v0 += x
     xchg   v0, v1            ; XCHG(v0, v1); 
-    
-    dec    ecx
-    jp     xtea_l0           ; for (j=0; j<2; j++)
-    
-    pop    ecx
     loop   xtea_enc    
     
     pop    edi               ; edi = v
