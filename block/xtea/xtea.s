@@ -19,22 +19,24 @@
 xtea_encrypt:
 	@ args = 0, pretend = 0, frame = 0
 	@ frame_needed = 0, uses_anonymous_args = 0
-	stmfd	sp!, {r4, r5, lr}
+	stmfd	sp!, {r4, r5, r6, lr}
 	mov	r0, r0, asl #1
 	ldmia	r2, {r4, lr}
 	mov	r3, #0
+	ldr r6, xtea_const
 .L2:
-	cmp	r0, #0
-	ble	.L8
+	//cmp	r0, #0
+	//ble	.L8
 	tst	r0, #1
-	addne	r3, r3, #-1644167168
-	addne	r3, r3, #3620864
-	addne	r3, r3, #14720
-	addne	r3, r3, #57
+	addne r3, r3, r6
+	//addne	r3, r3, #-1644167168
+	//addne	r3, r3, #3620864
+	//addne	r3, r3, #14720
+	//addne	r3, r3, #57
 	moveq	ip, r3
 	movne	ip, r3, lsr #11
 	and	ip, ip, #3
-	sub	r0, r0, #1
+	//sub	r0, r0, #1
 	ldr	ip, [r1, ip, asl #2]
 	add	r5, r3, ip
 	mov	ip, lr, asl #4
@@ -44,10 +46,14 @@ xtea_encrypt:
 	add	ip, ip, r4
 	mov	r4, lr
 	mov	lr, ip
-	b	.L2
+	subs r0, r0, #1
+	bne .L2
+	//b	.L2
 .L8:
 	stmia	r2, {r4, lr}
-	ldmfd	sp!, {r4, r5, pc}
+	ldmfd	sp!, {r4, r5, r6, pc}
+xtea_const:	
+	.word 0x9E3779B9
 	.size	xtea_encrypt, .-xtea_encrypt
 	.ident	"GCC: (Raspbian 4.9.2-10) 4.9.2"
 	.section	.note.GNU-stack,"",%progbits
