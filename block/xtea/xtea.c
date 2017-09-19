@@ -37,16 +37,14 @@ void xtea_encrypt(uint32_t rnds, void *key, void *buf) {
     
     v0 = v[0]; v1 = v[1];
     
-    for (i=0; i<rnds; i++) {
-      for (j=0; j<2; j++) {
-        t = sum;
-        if (j) {
-          sum += 0x9E3779B9;
-          t = sum >> 11;          
-        }
-        v0  += ((((v1 << 4) ^ (v1 >> 5)) + v1) ^ (sum + k[t & 3]));        
-        XCHG(v0, v1);
+    for (i=0; i<64; i++) {
+      t = sum;
+      if (i & 1) {
+        sum += 0x9E3779B9;
+        t = sum >> 11;          
       }
+      v0  += ((((v1 << 4) ^ (v1 >> 5)) + v1) ^ (sum + k[t & 3]));        
+      XCHG(v0, v1);
     }
     v[0] = v0; v[1] = v1;
 }

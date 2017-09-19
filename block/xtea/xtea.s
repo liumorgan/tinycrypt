@@ -36,17 +36,17 @@ xtea_encrypt:
 	add	ip, ip, lr           // += v1
 	eor	ip, ip, r5           // ^ (sum + k[t & 3])); 
 	add	r4, r4, ip           // v0 += 
-	
+	 
   add	r3, r3, #-1644167168
 	add	r3, r3, #3620864
 	add	r3, r3, #14720
 	add	r3, r3, #57
   
-	mov	ip, r4, asl #4
-	eor	ip, ip, r4, lsr #5
-	add	r5, ip, r4
-	mov	ip, r3, lsr #11
-	and	ip, ip, #3
+	mov	ip, r4, asl #4       // t = v0 << 4 
+	eor	ip, ip, r4, lsr #5   // v0 >> 5
+	add	r5, ip, r4           // += v0
+	mov	ip, r3, lsr #11      // t = sum >> 11
+	and	ip, ip, #3           // 
 	ldr	ip, [r1, ip, asl #2]
 	add	ip, r3, ip
 	eor	ip, ip, r5
