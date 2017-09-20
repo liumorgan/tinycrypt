@@ -24,7 +24,7 @@ speck64_encryptx:
   
   // k0 =  ROTL32(k0, 3) ^ k1;
   eor   r2, r3, r2, ror #29
-  
+
   mov   r8, r4
   mov   r4, r5
   mov   r5, r8

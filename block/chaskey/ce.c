@@ -29,7 +29,7 @@
   
 #include "chaskey.h"
 
-void chas_encrypt(void *key, void *buf) 
+void chaskey(void *key, void *buf) 
 {
    int      i;
    uint32_t *v=(uint32_t*)buf;
