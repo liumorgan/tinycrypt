@@ -38,6 +38,7 @@ xor_key:
 chaskey:
 	@ args = 0, pretend = 0, frame = 0
 	@ frame_needed = 0, uses_anonymous_args = 0
+  
 	stmfd	sp!, {r3, r4, r5, lr}
 	mov	r4, r1
 	mov	r5, r0
@@ -58,6 +59,7 @@ chaskey:
 	eor	r2, ip, r2, ror #19
 	mov	r3, r3, ror #16
 	bne	.L6
+  
 	stmib	r4, {r1, r3}
 	str	ip, [r4]
 	str	r2, [r4, #12]
@@ -65,6 +67,7 @@ chaskey:
 	mov	r1, r4
 	ldmfd	sp!, {r3, r4, r5, lr}
 	b	xor_key
+  
 	.size	chaskey, .-chaskey
 	.ident	"GCC: (Raspbian 4.9.2-10) 4.9.2"
 	.section	.note.GNU-stack,"",%progbits

@@ -29,23 +29,14 @@
   
 #include "chaskey.h"
 
-void xor_key(uint32_t *k, uint32_t *v) {
-    int i;
-
-    for (i=0; i<4; i++) {
-      v[i] ^= k[i];
-    }
-}
-
 void chaskey(void *key, void *buf) 
 {
    int      i;
    uint32_t *v=(uint32_t*)buf;
    uint32_t *k=(uint32_t*)key;
    
-   xor_key(k, v);
+   for (i=0; i<4; i++) v[i] ^= k[i];
    
-   // apply permutation function
    for (i=0; i<16; i++) {
      v[0] += v[1]; 
      v[1]=ROTL32(v[1], 5); 
@@ -62,5 +53,5 @@ void chaskey(void *key, void *buf)
      v[1] ^= v[2]; 
      v[2]=ROTL32(v[2],16);
    }
-   xor_key(k, v);
+   for (i=0; i<4; i++) v[i] ^= k[i];
 }
