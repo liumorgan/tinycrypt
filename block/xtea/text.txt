@@ -1,0 +1,197 @@
+
+
+0] intro
+
+For me, one of the best ways to learn a new assembly language, is to generate an assembly listing by a compiler. 
+This can be done with any modern compiler such as MSVC, GNU C, or C Lang.
+
+Of course, this assumes you're already familiar with a high level language such as C, or are at least comfortable
+reading C-like statements, expressions, loops, operators. 
+
+It's also nice to implement an algorithm you or others might find useful, so what I decided to do while learning armv6 (32-bit) assembly is
+implement a number of block ciphers suitable for resource constrained environments AKA IoT, which ARM probably dominates because of its low-cost,
+low-power consumption chips.
+
+These ciphers should be efficient in performance, and include countermeasures against timing attacks, but I'll leave that to you as exercise.  
+So I focus on 3 block ciphers and emulation of aesenc/aesclast which i discussed previously.
+
+
+1] eXtended Tiny Encryption Algorithm
+
+This assembly code generated from this source could be more compact if we hard code the number of rounds.
+For example, the recommended parameter is 64, and for this algorithm would require setting i to 128.
+
+void xtea_encrypt(uint32_t rnds, void *key, void *buf) {
+    int      i, j;
+    uint32_t v0, v1, t, sum=0;
+    uint32_t *k=(uint32_t*)key;
+    uint32_t *v=(uint32_t*)buf;
+    
+    v0 = v[0]; v1 = v[1];
+    
+    for (i=rnds<<1; i>0; i--) {
+      t = sum;
+      if (i & 1) {
+        sum += 0x9E3779B9;
+        t = sum >> 11;          
+      }
+      v0  += ((((v1 << 4) ^ (v1 >> 5)) + v1) ^ (sum + k[t & 3]));        
+      XCHG(v0, v1);
+    }
+    v[0] = v0; v[1] = v1;
+}
+
+
+The end result looks like this.
+
+// xtea in armv6 assembly
+// 96 bytes
+  .text
+  .align  2
+  .global xtea_encrypt
+
+xtea_encrypt:
+  push  {r4, r5, r6, lr}
+  
+  mov   r0, r0, asl #1
+  ldm   r2, {r4, lr}
+  mov   r3, #0
+  ldr   r6, xtea_const
+.L2:
+  tst   r0, #1
+  addne r3, r3, r6
+  moveq ip, r3
+  movne ip, r3, lsr #11
+  and   ip, ip, #3
+  ldr   ip, [r1, ip, asl #2]
+  add   r5, r3, ip
+  mov   ip, lr, asl #4
+  eor   ip, ip, lr, lsr #5
+  add   ip, ip, lr
+  eor   ip, ip, r5
+  add   ip, ip, r4
+  mov   r4, lr
+  mov   lr, ip
+  subs  r0, r0, #1
+  bne   .L2
+.L8:
+  stm   r2, {r4, lr}
+  pop   {r4, r5, r6, pc}
+xtea_const: 
+  .word 0x9E3779B9
+  
+  
+2] Speck
+
+Another algorithm specifically designed for IoT is the Speck block cipher. 
+
+uint64_t speck64_encrypt(const void *buf, const void *key)
+{
+    uint32_t  x0, x1;
+    uint32_t  k0, k1, k2, k3;
+    uint32_t  i, t;
+    w64_t     r;
+
+    w64_t     *x=(w64_t*)buf;
+    w128_t    *k=(w128_t*)key;
+    
+    // load key
+    k0 = k->w[0]; k1 = k->w[1];
+    k2 = k->w[2]; k3 = k->w[3];
+
+    // load data
+    x0 = x->w[0]; x1 = x->w[1];
+
+    for (i=0; i<27; i++) {
+      // encrypt block
+      x0 = (ROTR32(x0, 8) + x1) ^ k0;
+      x1 =  ROTL32(x1, 3) ^ x0;
+      
+      // create next subkey
+      k1 = (ROTR32(k1, 8) + k0) ^ i;
+      k0 =  ROTL32(k0, 3) ^ k1;
+      
+      XCHG(k3, k2);
+      XCHG(k3, k1);    
+    }
+    // store result
+    r.w[0] = x0; r.w[1] = x1;
+    return r.q;    
+}
+
+3] Chaskey
+
+void chas_encrypt(void *key, void *buf) 
+{
+   int      i;
+   uint32_t *v=(uint32_t*)buf;
+   uint32_t *k=(uint32_t*)key;
+   
+   // mix key
+   for (i=0; i<4; i++) {
+     v[i] ^= k[i];
+   }
+   // apply permutation 
+   for (i=0; i<16; i++) {
+     v[0] += v[1]; 
+     v[1]=ROTL32(v[1], 5); 
+     v[1] ^= v[0]; 
+     v[0]=ROTL32(v[0],16);       
+     v[2] += v[3]; 
+     v[3]=ROTL32(v[3], 8); 
+     v[3] ^= v[2];
+     v[0] += v[3]; 
+     v[3]=ROTL32(v[3],13); 
+     v[3] ^= v[0];
+     v[2] += v[1]; 
+     v[1]=ROTL32(v[1], 7); 
+     v[1] ^= v[2]; 
+     v[2]=ROTL32(v[2],16);
+   }
+   // mix key
+   for (i=0; i<4; i++) {
+     v[i] ^= k[i];
+   }
+}
+
+4] Gimli
+
+This is a permutation function, which can be used to build a block cipher, so I thought
+it was worth discussing.
+
+extern void gimli(uint32_t *s)
+{
+  int      r, j;
+  uint32_t t, x, y, z;
+  
+  for (r=0x9e377918; r!=0x9e377900; r--) {
+    for (j=0; j<4; j++) {
+      x = ROTR32(s[    j], 8);
+      y = ROTL32(s[4 + j], 9);
+      z =        s[8 + j];
+
+      s[8 + j] = x ^ (z << 1) ^ ((y & z) << 2);
+      s[4 + j] = y ^ x        ^ ((x | z) << 1);
+      s[j]     = z ^ y        ^ ((x & y) << 3);
+    }
+
+    t = r & 3;
+    
+    // small swap
+    if (t == 0) {
+      XCHG(s[0], s[1]);
+      XCHG(s[2], s[3]);
+      
+      // add constant      
+      s[0] ^= r;
+    } else  
+    // big swap
+    if (t == 2) {
+      XCHG(s[0], s[2]);
+      XCHG(s[1], s[3]);
+    }
+  }
+}
+
+5] AES encryption  
+
