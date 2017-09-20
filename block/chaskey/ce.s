@@ -14,53 +14,57 @@
 	.file	"ce.c"
 	.text
 	.align	2
+	.global	xor_key
+	.type	xor_key, %function
+xor_key:
+	@ args = 0, pretend = 0, frame = 0
+	@ frame_needed = 0, uses_anonymous_args = 0
+	@ link register save eliminated.
+	sub	r3, r1, #4
+	sub	r0, r0, #4
+	add	r1, r1, #12
+.L2:
+	ldr	ip, [r3, #4]!
+	ldr	r2, [r0, #4]!
+	cmp	r3, r1
+	eor	r2, r2, ip
+	str	r2, [r3]
+	bne	.L2
+	bx	lr
+	.size	xor_key, .-xor_key
+	.align	2
 	.global	chaskey
 	.type	chaskey, %function
 chaskey:
 	@ args = 0, pretend = 0, frame = 0
 	@ frame_needed = 0, uses_anonymous_args = 0
-	stmfd	sp!, {r4, r5, r6, lr}
-	sub	r0, r0, #4
-	sub	r4, r1, #4
-	add	r5, r1, #12
-	mov	ip, r0
-	mov	r3, r4
-.L2:
-	ldr	lr, [r3, #4]!
-	ldr	r2, [ip, #4]!
-	cmp	r3, r5
-	eor	r2, r2, lr
-	str	r2, [r3]
-	bne	.L2
-	ldr	lr, [r1]
-	ldr	ip, [r1, #4]
-	ldr	r3, [r1, #8]
-	ldr	r2, [r1, #12]
-	mov	r6, #16
-.L3:
-	add	lr, lr, ip
-	eor	ip, lr, ip, ror #27
+	stmfd	sp!, {r3, r4, r5, lr}
+	mov	r4, r1
+	mov	r5, r0
+	bl	xor_key
+	ldr	ip, [r4]
+	ldmib	r4, {r1, r3}
+	ldr	r2, [r4, #12]
+	mov	r0, #16
+.L6:
+	add	ip, ip, r1
+	eor	r1, ip, r1, ror #27
 	add	r3, r3, r2
 	eor	r2, r3, r2, ror #24
-	add	r3, ip, r3
-	add	lr, r2, lr, ror #16
-	subs	r6, r6, #1
-	eor	ip, r3, ip, ror #25
-	eor	r2, lr, r2, ror #19
+	add	r3, r1, r3
+	add	ip, r2, ip, ror #16
+	subs	r0, r0, #1
+	eor	r1, r3, r1, ror #25
+	eor	r2, ip, r2, ror #19
 	mov	r3, r3, ror #16
-	bne	.L3
-	str	lr, [r1]
-	str	ip, [r1, #4]
-	str	r3, [r1, #8]
-	str	r2, [r1, #12]
-.L4:
-	ldr	r2, [r4, #4]!
-	ldr	r3, [r0, #4]!
-	cmp	r4, r5
-	eor	r3, r3, r2
-	str	r3, [r4]
-	bne	.L4
-	ldmfd	sp!, {r4, r5, r6, pc}
+	bne	.L6
+	stmib	r4, {r1, r3}
+	str	ip, [r4]
+	str	r2, [r4, #12]
+	mov	r0, r5
+	mov	r1, r4
+	ldmfd	sp!, {r3, r4, r5, lr}
+	b	xor_key
 	.size	chaskey, .-chaskey
 	.ident	"GCC: (Raspbian 4.9.2-10) 4.9.2"
 	.section	.note.GNU-stack,"",%progbits
