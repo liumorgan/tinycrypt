@@ -30,7 +30,7 @@
 #ifndef LEA_H
 #define LEA_H
 
-#include "macros.h"
+#include "../../macros.h"
   
 #define LEA128_RNDS 24
 #define LEA192_RNDS 28
