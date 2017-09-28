@@ -30,14 +30,14 @@
 #ifndef LEA_H
 #define LEA_H
 
-#include "../../macros.h"
+#include "macros.h"
   
 #define LEA128_RNDS 24
 #define LEA192_RNDS 28
 #define LEA256_RNDS 32
 
 typedef struct _lea_ctx_t {
-    uint64_t key[LEA128_RNDS];
+    uint64_t key[LEA256_RNDS];
 } lea_ctx;
 
 typedef union _w32_t {
@@ -55,11 +55,12 @@ typedef union _w64_t {
 extern "C" {
 #endif
 
-void lea_setkey(void*, void*);
-void lea_encrypt(void*, void*);
+  void lea128_setkey(void*, void*);
+  void lea128_encrypt(void*, void*);
+  void lea128_encryptx(void*, void*);
 
-void lea128_encrypt(void*, void*);
-void lea128_encryptx(void*, void*);
+  void lea256_setkey(void*, void*);
+  void lea256_encrypt(void*, void*);
     
 #ifdef __cplusplus
 }

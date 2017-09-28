@@ -22,15 +22,15 @@ int main(void)
 {
   uint8_t  buf[16];
   int      equ, i;
-  uint32_t subkeys[384];
+  uint32_t subkeys[LEA128_RNDS*4];
   
   memcpy (buf, plain, 16);
   
   #ifndef SINGLE
-    lea_setkey(key, subkeys);
-    lea_encrypt(subkeys, buf);
+    lea128_setkey(key, subkeys);
+    lea128_encrypt(subkeys, buf);
   #else  
-    lea128_encrypt(key, buf);
+    lea128_encrypt_single(key, buf);
   #endif  
   
   for (i=0; i<16; i++) printf ("%02x ", buf[i]);

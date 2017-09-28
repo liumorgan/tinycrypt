@@ -30,7 +30,7 @@
 ; -----------------------------------------------
 ; LEA-128 Block Cipher in x86 assembly (Encryption only)
 ;
-; size: 161 bytes
+; size: 149 bytes
 ;
 ; global calls use cdecl convention
 ;
@@ -39,8 +39,8 @@
     bits 32
     
     %ifndef BIN
-      global lea128_encryptx
-      global _lea128_encryptx
+      global lea128_encrypt_singlex
+      global _lea128_encrypt_singlex
     %endif
     
 struc pushad_t
@@ -60,19 +60,18 @@ endstruc
 %define k2 edi
 %define k3 ebp
      
-%define p0 [esi+4*0]     
-%define p1 [esi+4*1]     
-%define p2 [esi+4*2]     
-%define p3 [esi+4*3]
+%define b0 [esi+4*0]     
+%define b1 [esi+4*1]     
+%define b2 [esi+4*2]     
+%define b3 [esi+4*3]
      
 %define t ecx
 %define x eax
-%define y ecx
-     
+
 %define LEA128_RNDS 24
      
-lea128_encryptx:
-_lea128_encryptx:
+lea128_encrypt_singlex:
+_lea128_encrypt_singlex:
     pushad   
     ; initialize 4 constants
     mov    edi, 0xc3efe9db   ; td[0]
@@ -125,39 +124,33 @@ lea_l0:
     ; **************************************
     ; encrypt block
     ; **************************************
-    ; p3 = ROTR32((p2 ^ k3) + (p3 ^ k1), 3);
-    mov    x, p2             
-    mov    y, p3
+    ; b3 = ROTR32((b2 ^ k3) + (b3 ^ k1), 3);
+    mov    x, b2
+    mov    t, b3
     xor    x, k3
-    xor    y, k1
-    add    x, y
-    ror    x, 3
-    mov    p3, x
-    
-    ; p2 = ROTR32((p1 ^ k2) + (p2 ^ k1), 5);
-    mov    x, p1             
-    mov    y, p2
+    xor    t, k1
+    add    t, x
+    ror    t, 3    
+   
+    ; b2 = ROTR32((b1 ^ k2) + (b2 ^ k1), 5);
+    mov    x, b1 
     xor    x, k2
-    xor    y, k1
-    add    x, y
-    ror    x, 5
-    mov    p2, x
+    xor    b2, k1
+    add    b2, x
+    ror    dword b2, 5
     
-    ; p1 = ROTL32((p0 ^ k0) + (p1 ^ k1), 9);
-    mov    x, p0             
-    mov    y, p1
+    ; b1 = ROTL32((b0 ^ k0) + (b1 ^ k1), 9);    
+    mov    x, b0             
     xor    x, k0
-    xor    y, k1
-    add    x, y
-    rol    x, 9
-    mov    p1, x
+    xor    b1, k1
+    add    b1, x
+    rol    dword b1, 9
     
     ; rotate block 32-bits
-    mov    t, p3
-    xchg   t, p2             ; XCHG(p0, p1); 
-    xchg   t, p1             ; XCHG(p1, p2);
-    xchg   t, p0             ; XCHG(p2, p3);
-    mov    p3, t
+    xchg   t, b2             ; XCHG(b0, b1); 
+    xchg   t, b1             ; XCHG(b1, b2);
+    xchg   t, b0             ; XCHG(b2, b3);
+    mov    b3, t
     
     pop    eax
     inc    eax               ; i++
