@@ -95,10 +95,10 @@ void SHA1_Init (SHA1_CTX *c) {
 }
 
 /************************************************
-*
-* update state with input
-*
-************************************************/
+ *
+ * update state with input
+ *
+ ************************************************/
 void SHA1_Update (SHA1_CTX *c, void *in, uint32_t len) {
   uint8_t *p = (uint8_t*)in;
   uint32_t  r, idx;
@@ -112,7 +112,7 @@ void SHA1_Update (SHA1_CTX *c, void *in, uint32_t len) {
   c->len += len;
   
   while (len > 0) {
-    r = len >= SHA1_CBLOCK ? SHA1_CBLOCK : len;
+    r = MIN(len, SHA1_CBLOCK - idx);
     memcpy ((void*)&c->buf.b[idx], p, r);
     if ((idx + r) < SHA1_CBLOCK) break;
     
@@ -124,10 +124,10 @@ void SHA1_Update (SHA1_CTX *c, void *in, uint32_t len) {
 }
 
 /************************************************
-*
-* finalize.
-*
-************************************************/
+ *
+ * finalize.
+ *
+ ************************************************/
 void SHA1_Final (void* dgst, SHA1_CTX *c)
 {
   uint32_t i;
@@ -148,7 +148,7 @@ void SHA1_Final (void* dgst, SHA1_CTX *c)
     memset (c->buf.b, 0, SHA1_CBLOCK);
   }
   // add total bits
-  c->buf.q[7] = SWAP64(c->len << 3);
+  c->buf.q[7] = SWAP64(c->len * 8);
   
   // compress
   SHA1_Transform (c);

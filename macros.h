@@ -10,4 +10,6 @@
 
 #define XCHG(x, y) (t) = (x); (x) = (y); (y) = (t);
 
+#define MIN(X, Y) (((X) < (Y)) ? (X) : (Y))
+
 #endif

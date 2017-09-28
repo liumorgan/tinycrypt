@@ -36,8 +36,6 @@
 #define SHA256_DIGEST_LENGTH 32
 #define SHA256_LBLOCK        SHA256_DIGEST_LENGTH/4
 
-#define MIN(X, Y) (((X) < (Y)) ? (X) : (Y))
-
 #pragma pack(push, 1)
 typedef struct _SHA256_CTX {
   uint64_t len;
