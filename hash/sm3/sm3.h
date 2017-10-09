@@ -36,8 +36,6 @@
 #define SM3_DIGEST_LENGTH 32
 #define SM3_LBLOCK        SM3_DIGEST_LENGTH/4
 
-#define MIN(X, Y) (((X) < (Y)) ? (X) : (Y))
-
 #pragma pack(push, 1)
 typedef struct _SM3_CTX {
   uint64_t len;

@@ -76,7 +76,7 @@ uint32_t cbr2int (uint32_t x) {
 ************************************************/
 void SHA256_Transform (SHA256_CTX *c) 
 {
-    uint32_t t1, t2, i, j, t;
+    uint32_t t1, t2, i, j;
     uint32_t w[64], s[8];
 #ifndef DYNAMIC
     uint32_t k[64]=
@@ -99,7 +99,7 @@ void SHA256_Transform (SHA256_CTX *c)
 #endif  
     // load data in big endian format
     for (i=0; i<16; i++) {
-      w[i] = SWAP32(c->buf.v32[i]);
+      w[i] = SWAP32(c->buf.w[i]);
     }
 
     // expand data into 512-bit buffer
@@ -109,7 +109,7 @@ void SHA256_Transform (SHA256_CTX *c)
     
     // load state into local buffer
     for (i=0; i<8; i++) {
-      s[i] = c->s.v32[i];
+      s[i] = c->s.w[i];
     }
     
     // for 64 rounds
@@ -136,7 +136,7 @@ void SHA256_Transform (SHA256_CTX *c)
     
     // save state
     for (i=0; i<8; i++) {
-      c->s.v32[i] += s[i];
+      c->s.w[i] += s[i];
     }
 }
 
@@ -150,17 +150,17 @@ void SHA256_Init (SHA256_CTX *c) {
     #ifdef DYNAMIC
     int i;
     for (i=0; i<SHA256_LBLOCK; i++) {
-      c->s.v32[i] = sqrt2int(i);
+      c->s.w[i] = sqrt2int(i);
     }
     #else
-    c->s.v32[0] = 0x6a09e667;
-    c->s.v32[1] = 0xbb67ae85;
-    c->s.v32[2] = 0x3c6ef372;
-    c->s.v32[3] = 0xa54ff53a;
-    c->s.v32[4] = 0x510e527f;
-    c->s.v32[5] = 0x9b05688c;
-    c->s.v32[6] = 0x1f83d9ab;
-    c->s.v32[7] = 0x5be0cd19;
+    c->s.w[0] = 0x6a09e667;
+    c->s.w[1] = 0xbb67ae85;
+    c->s.w[2] = 0x3c6ef372;
+    c->s.w[3] = 0xa54ff53a;
+    c->s.w[4] = 0x510e527f;
+    c->s.w[5] = 0x9b05688c;
+    c->s.w[6] = 0x1f83d9ab;
+    c->s.w[7] = 0x5be0cd19;
     #endif
     c->len = 0;
 }
@@ -170,19 +170,19 @@ void SHA256_Init (SHA256_CTX *c) {
 * update state with input
 *
 ************************************************/
-void SHA256_Update (SHA256_CTX *c, void *in, size_t len) {
-    uint8_t *p = (uint8_t*)in;
-    size_t r, idx;
+void SHA256_Update (SHA256_CTX *c, void *in, uint32_t len) {
+    uint8_t  *p = (uint8_t*)in;
+    uint32_t r, idx;
     
     // get buffer index
-    idx = c->len & SHA256_CBLOCK - 1;
+    idx = c->len & (SHA256_CBLOCK - 1);
     
     // update length
     c->len += len;
     
     while (len) {
       r = MIN(len, SHA256_CBLOCK - idx);
-      memcpy (&c->buf.v8[idx], p, r);
+      memcpy (&c->buf.b[idx], p, r);
       if ((idx + r) < SHA256_CBLOCK) break;
       
       SHA256_Transform (c);
@@ -202,26 +202,26 @@ void SHA256_Final (void* dgst, SHA256_CTX *c)
     int i;
     
     // see what length we have ere..
-    uint64_t len=c->len & SHA256_CBLOCK - 1;
+    uint64_t len=c->len & (SHA256_CBLOCK - 1);
     // fill remaining with zeros
-    memset (&c->buf.v8[len], 0, SHA256_CBLOCK - len);
+    memset (&c->buf.b[len], 0, SHA256_CBLOCK - len);
     // add the end bit
-    c->buf.v8[len] = 0x80;
+    c->buf.b[len] = 0x80;
     // if exceeding 56 bytes, transform it
     if (len >= 56) {
       SHA256_Transform (c);
       // clear buffer
-      memset (c->buf.v8, 0, SHA256_CBLOCK);
+      memset (c->buf.b, 0, SHA256_CBLOCK);
     }
     // add total bits
-    c->buf.v64[7] = SWAP64(c->len * 8);
+    c->buf.q[7] = SWAP64(c->len * 8);
     // compress
     SHA256_Transform(c);
     
     // swap byte order
     for (i=0; i<SHA256_LBLOCK; i++) {
-      c->s.v32[i] = SWAP32(c->s.v32[i]);
+      c->s.w[i] = SWAP32(c->s.w[i]);
     }
     // copy digest to buffer
-    memcpy (dgst, c->s.v8, SHA256_DIGEST_LENGTH);
+    memcpy (dgst, c->s.b, SHA256_DIGEST_LENGTH);
 }

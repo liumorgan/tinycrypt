@@ -36,7 +36,7 @@
 ************************************************/
 void SHA1_Transform (SHA1_CTX *ctx) 
 {
-  uint32_t a, b, c, d, e, t, i;
+  uint32_t t, i;
   uint32_t w[80], s[SHA1_LBLOCK];
 
   // copy buffer to local
@@ -106,7 +106,7 @@ void SHA1_Update (SHA1_CTX *c, void *in, uint32_t len) {
   if (len==0) return;
   
   // get buffer index
-  idx = c->len & SHA1_CBLOCK - 1;
+  idx = c->len & (SHA1_CBLOCK - 1);
   
   // update length
   c->len += len;
@@ -133,7 +133,7 @@ void SHA1_Final (void* dgst, SHA1_CTX *c)
   uint32_t i;
   
   // see what length we have ere..
-  uint32_t len=c->len & SHA1_CBLOCK - 1;
+  uint32_t len=c->len & (SHA1_CBLOCK - 1);
   
   // add the end bit
   c->buf.b[len++] = 0x80;

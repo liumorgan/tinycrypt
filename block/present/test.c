@@ -41,7 +41,7 @@ void bin2hex (uint8_t dgst[], size_t len)
   putchar ('\n');
 }
 
-int test(char inputStr[16], char expectedOutputStr[16], char keyStr[32]) {
+char* test(char inputStr[16], char expectedOutputStr[16], char keyStr[32]) {
   uint8_t     input[8];
   uint8_t     expectedOutput[8];
   uint8_t     key[16];
@@ -58,17 +58,17 @@ int test(char inputStr[16], char expectedOutputStr[16], char keyStr[32]) {
   for(i = 0; i < 8; i++) {
     if(input[i] != expectedOutput[i]) {
       printf("FAILED : index:%i, %02X != %02X\n", i, input[i], expectedOutput[i]);
-      return 0;
+      return "FAILED";
     }
   }  
-  return 1;
+  return "OK";
 }
 
 int main(void)
 {
-  printf("Test e128-k00_t00.txt: %i\n", test("0000000000000000", "96db702a2e6900af", "00000000000000000000000000000000"));
-  printf("Test e128-k00_tff.txt: %i\n", test("ffffffffffffffff", "3c6019e5e5edd563", "00000000000000000000000000000000"));
-  printf("Test e128-kff_t00.txt: %i\n", test("0000000000000000", "13238c710272a5d8", "ffffffffffffffffffffffffffffffff"));
-  printf("Test e128-kff_tff.txt: %i\n", test("ffffffffffffffff", "628d9fbd4218e5b4", "ffffffffffffffffffffffffffffffff"));
+  printf("Test e128-k00_t00.txt: %s\n", test("0000000000000000", "96db702a2e6900af", "00000000000000000000000000000000"));
+  printf("Test e128-k00_tff.txt: %s\n", test("ffffffffffffffff", "3c6019e5e5edd563", "00000000000000000000000000000000"));
+  printf("Test e128-kff_t00.txt: %s\n", test("0000000000000000", "13238c710272a5d8", "ffffffffffffffffffffffffffffffff"));
+  printf("Test e128-kff_tff.txt: %s\n", test("ffffffffffffffff", "628d9fbd4218e5b4", "ffffffffffffffffffffffffffffffff"));
   return 0;
 }

@@ -118,7 +118,7 @@ void MD4_Update (MD4_CTX *c, void *in, uint32_t len) {
   if (len==0) return;
   
   // get buffer index
-  idx = c->len & MD4_CBLOCK - 1;
+  idx = c->len & (MD4_CBLOCK - 1);
   
   // update length
   c->len += len;
@@ -143,7 +143,7 @@ void MD4_Update (MD4_CTX *c, void *in, uint32_t len) {
 void MD4_Final (void* dgst, MD4_CTX *c)
 {
   // see what length we have ere..
-  uint32_t len=c->len & MD4_CBLOCK - 1;
+  uint32_t len=c->len & (MD4_CBLOCK - 1);
   // fill with zeros
   memset (&c->buf.b[len], 0, MD4_CBLOCK - len);
   // add the end bit

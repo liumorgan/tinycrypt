@@ -55,7 +55,7 @@ int main(void)
     xtea_encrypt(32, key, buf);
     
     equ = memcmp(buf, &xtea_test_ct[i][0], 8)==0;
-    printf ("\nXTEA Test #%i %s", 
+    printf ("XTEA Test #%i %s\n", 
         (i+1), equ ? "OK" : "FAILED");
   }
   return 0;

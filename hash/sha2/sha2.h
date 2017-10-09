@@ -40,14 +40,14 @@
 typedef struct _SHA256_CTX {
   uint64_t len;
   union {
-    uint8_t  v8[SHA256_DIGEST_LENGTH];
-    uint32_t v32[SHA256_DIGEST_LENGTH/4];
-    uint64_t v64[SHA256_DIGEST_LENGTH/8];
+    uint8_t  b[SHA256_DIGEST_LENGTH];
+    uint32_t w[SHA256_DIGEST_LENGTH/4];
+    uint64_t q[SHA256_DIGEST_LENGTH/8];
   } s;
   union {
-    uint8_t  v8[SHA256_CBLOCK];
-    uint32_t v32[SHA256_CBLOCK/4];
-    uint64_t v64[SHA256_CBLOCK/8];
+    uint8_t  b[SHA256_CBLOCK];
+    uint32_t w[SHA256_CBLOCK/4];
+    uint64_t q[SHA256_CBLOCK/8];
   } buf;
 } SHA256_CTX;
 #pragma pack(pop)
@@ -56,14 +56,14 @@ typedef struct _SHA256_CTX {
 typedef struct _SHA256X_CTX {
   uint32_t len;
   union {
-    uint8_t  v8[SHA256_DIGEST_LENGTH];
-    uint32_t v32[SHA256_DIGEST_LENGTH/4];
-    uint64_t v64[SHA256_DIGEST_LENGTH/8];
+    uint8_t  b[SHA256_DIGEST_LENGTH];
+    uint32_t w[SHA256_DIGEST_LENGTH/4];
+    uint64_t q[SHA256_DIGEST_LENGTH/8];
   } s;
   union {
-    uint8_t  v8[SHA256_CBLOCK];
-    uint32_t v32[SHA256_CBLOCK/4];
-    uint64_t v64[SHA256_CBLOCK/8];
+    uint8_t  b[SHA256_CBLOCK];
+    uint32_t w[SHA256_CBLOCK/4];
+    uint64_t q[SHA256_CBLOCK/8];
   } buf;
 } SHA256X_CTX;
 #pragma pack(pop)
@@ -75,14 +75,14 @@ typedef struct _SHA256X_CTX {
 #pragma pack(push, 1)
 typedef struct _SHA512_CTX {
   union {
-    uint8_t  v8[SHA512_DIGEST_LENGTH];
-    uint32_t v32[SHA512_DIGEST_LENGTH/4];
-    uint64_t v64[SHA512_DIGEST_LENGTH/8];
+    uint8_t  b[SHA512_DIGEST_LENGTH];
+    uint32_t w[SHA512_DIGEST_LENGTH/4];
+    uint64_t q[SHA512_DIGEST_LENGTH/8];
   } state;
   union {
-    uint8_t  v8[SHA512_CBLOCK];
-    uint32_t v32[SHA512_CBLOCK/4];
-    uint64_t v64[SHA512_CBLOCK/8];
+    uint8_t  b[SHA512_CBLOCK];
+    uint32_t w[SHA512_CBLOCK/4];
+    uint64_t q[SHA512_CBLOCK/8];
   } buffer;
   uint64_t len[2];
 } SHA512_CTX;
@@ -103,14 +103,6 @@ extern "C" {
   void SHA512_Transform (SHA512_CTX *ctx);
 #ifdef __cplusplus
 }
-#endif
-
-#ifdef USE_ASM
-#define SHA256_Init(x) SHA256_Initx(x)
-#define SHA256_Update(x, y, z) SHA256_Updatex(x,y,z)
-#define SHA256_Final(x, y) SHA256_Finalx(x,y)
-
-#define SHA512_Transform(x) SHA512_Transformx(x)
 #endif
 
 #endif

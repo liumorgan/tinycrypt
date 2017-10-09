@@ -104,5 +104,6 @@ int main (void)
       printf ("\nEncryption failed");
     }
   }
+  putchar('\n');
   return 0;
 }

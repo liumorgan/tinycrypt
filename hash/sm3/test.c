@@ -142,10 +142,9 @@ uint8_t vectors[64][32]={
 int main(int argc, char *argv[])
 {
   SM3_CTX ctx;
-  int     i, j, fail;
+  int     i, fail;
   uint8_t out[32]={0};  
   uint8_t msg[64];
-  char    *c;
 
   for (fail=0, i=0; i<64; i++) {
     memset(msg, 0, sizeof(msg));
@@ -156,29 +155,11 @@ int main(int argc, char *argv[])
     SM3_Final(out, &ctx);
   
     if (memcmp(out, vectors[i], 32)) {
-      printf ("\nHash for test vector %i failed", i+1);
+      printf ("Hash for test vector %i failed\n", i+1);
       fail++;
     }      
   }
-  if (!fail) printf ("\nAll tests passed");
-  
-  /*
-  for (i=0; i<64; i++) {
-    memset(msg, 0, sizeof(msg));
-    msg[i] = i+1;
-    
-    SM3_Init(&ctx);
-    SM3_Update(&ctx, msg, i);
-    SM3_Final(out, &ctx);
-  
-    for (j=0; j<32; j++) {
-      if ((j & 15)==0) {printf("\n");}
-      if (j==0) printf("{ ");
-      printf("0x%02x", out[j]); 
-      if (j+1 != 32) putchar(',');
-      putchar(' ');
-    }
-    printf(" },");    
-  }*/
+  if (!fail) printf ("All SM3 tests passed\n");  
+
   return 0;
 }

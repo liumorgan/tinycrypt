@@ -45,7 +45,7 @@ int main(int argc, char **argv)
 	w128_t    x;
 
 	printf("Self-test:\n");		
-	kuz_setkeyx(&key, testvec_key);	
+	kuz_setkey(&key, testvec_key);	
   
 	for (i = 0; i < 10; i++) {	
 		printf("K_%d\t=", i + 1);
@@ -57,7 +57,7 @@ int main(int argc, char **argv)
 	printf("PT\t=");
 	print_w128(&x);
 
-	kuz_encryptx(&key, &x, KUZ_ENCRYPT);
+	kuz_encrypt(&key, &x, KUZ_ENCRYPT);
 
 	printf("CT\t=");
 	print_w128(&x);
@@ -69,8 +69,8 @@ int main(int argc, char **argv)
 		}
 	}
 
-	kuz_setkeyx(&key, testvec_key);
-	kuz_encryptx(&key, &x, KUZ_DECRYPT);
+	kuz_setkey(&key, testvec_key);
+	kuz_encrypt(&key, &x, KUZ_DECRYPT);
 
 	printf("PT\t=");
 	print_w128(&x);

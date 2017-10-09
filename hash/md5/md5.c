@@ -55,7 +55,7 @@ uint32_t tc (uint32_t i)
 ************************************************/
 void MD5_Transform (MD5_CTX* ctx) 
 {
-  uint32_t a, b, c, d, i, t, x, s;
+  uint32_t a, b, c, d, i, t, s;
   uint8_t rotf[]={7,12,17,22};
   uint8_t rotg[]={5, 9,14,20};
   uint8_t roth[]={4,11,16,23};
@@ -152,7 +152,7 @@ void MD5_Update (MD5_CTX* c, void *in, uint32_t len) {
   if (len==0) return;
   
   // get buffer index
-  idx = c->len & MD5_CBLOCK - 1;
+  idx = c->len & (MD5_CBLOCK - 1);
   
   // update length
   c->len += len;
@@ -177,7 +177,7 @@ void MD5_Update (MD5_CTX* c, void *in, uint32_t len) {
 void MD5_Final (void* dgst, MD5_CTX* c)
 {
   // see what length we have ere..
-  uint32_t len=c->len & MD5_CBLOCK - 1;
+  uint32_t len=c->len & (MD5_CBLOCK - 1);
   memset (&c->buf.b[len], 0, MD5_CBLOCK - len);
   // add the end bit
   c->buf.b[len] = 0x80;

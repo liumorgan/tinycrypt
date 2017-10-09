@@ -77,9 +77,9 @@ void run_tests(void)
     bf_encrypt (&bf_key, p1, c2);
 
     if (memcmp (c1, c2, clen)==0) {
-      printf ("\nPassed test #%i", (i+1));
+      printf ("Passed test #%i\n", (i+1));
     } else {
-      printf ("\nFailed test #%i | Got %08X %08X instead of %08X %08X", 
+      printf ("Failed test #%i | Got %08X %08X instead of %08X %08X\n", 
       (i+1), c2[0], c2[1], c1[0], c1[1]);
     }
   }

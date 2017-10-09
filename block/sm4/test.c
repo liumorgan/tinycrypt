@@ -36,7 +36,7 @@ int main(void)
   //}
   
   equ = memcmp(tv_cipher, tv_plain, 16)==0;
-  printf ("\nTest %s", equ ? "succeeded" : "failed");
+  printf ("SM4 Test %s\n", equ ? "succeeded" : "failed");
   
   return 0;
 }

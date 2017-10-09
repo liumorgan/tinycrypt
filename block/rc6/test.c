@@ -79,16 +79,17 @@ void run_tests (void)
     rc6_crypt (&rc6_key, p1, c2, RC6_ENCRYPT);
 
     if (memcmp (c1, c2, plen)==0) {
-      printf ("\nEncryption Passed test #%i", (i+1));
+      printf ("Encryption Passed test #%i\n", (i+1));
       rc6_crypt (&rc6_key, c2, p2, RC6_DECRYPT);
       if (memcmp (p1, p2, plen)==0) {
-        printf ("\nDecryption passed test #%i", (i+1));
+        printf ("Decryption passed test #%i\n", (i+1));
       } else {
-        printf ("\nDecryption failed");
+        printf ("Decryption failed\n");
       }
     } else {
-      printf ("\nFailed test #%i", (i+1));
+      printf ("Failed test #%i\n", (i+1));
     }
+    putchar('\n');    
   }
 }
 

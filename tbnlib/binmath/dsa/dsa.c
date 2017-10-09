@@ -40,6 +40,10 @@ int main (int argc, char *argv[])
   p=hex2bin("5E6DDA8BC9B2B5A9");
   q=hex2bin("D549");
   g=hex2bin("22729DB49EE21F4B");
+  
+  powmod
+  invmod
+  
   */
   printf ("\np=%llX\nq=%llX\ng=%llX", p, q, g);
   

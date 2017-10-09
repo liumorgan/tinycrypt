@@ -64,8 +64,7 @@ int run_tests (void)
   SHA256_CTX ctx;
   
   for (i=0; i<sizeof(text)/sizeof(char*); i++)
-  {
-    
+  {    
     hex2bin (tv, SHA256_dgst[i]);
     
     SHA256_Init (&ctx);
@@ -73,7 +72,7 @@ int run_tests (void)
     SHA256_Final (dgst, &ctx);
     
     if (memcmp (dgst, tv, SHA256_DIGEST_LENGTH) != 0) {
-      printf ("\nFailed for string len %i : %s", 
+      printf ("Failed for string len %ld : %s\n", 
         strlen (text[i]), text[i]);
       ++fails;
     }
@@ -170,193 +169,11 @@ uint32_t rounds, void *key, size_t key_len)
   return 0;
 }
 
-// print digest
-void SHA256_print (uint8_t dgst[], size_t len)
-{
-  size_t i;
-  for (i=0; i<len; i++) {
-    printf ("%02x", dgst[i]);
-  }
-  putchar ('\n');
-}
-
-// generate SHA-3 hash of string
-void SHA256_string (char *str)
-{
-  SHA256_CTX ctx;
-  size_t   i;
-  uint8_t  dgst[256];
-
-  printf ("\nSHA2-256(\"%s\")\n0x", str);
-  
-  SHA256_Init (&ctx);
-  SHA256_Update (&ctx, str, strlen (str));
-  SHA256_Final (dgst, &ctx);
-  
-  SHA256_print (dgst, SHA256_DIGEST_LENGTH);
-}
-
-void progress (uint64_t fs_complete, uint64_t fs_total)
-{
-  int           days=0, hours=0, minutes=0;
-  uint64_t      t, pct, speed, seconds=0;
-  static time_t start=0;
-  
-  if (start==0) {
-    start=time(0);
-    return;
-  }
-  
-  pct = (100*fs_complete)/fs_total;
-  
-  t = (time(0) - start);
-  
-  if (t != 0) {
-    seconds = (fs_total - fs_complete) / (fs_complete / t);
-    speed   = (fs_complete / t);
-    
-    days=0;
-    hours=0;
-    minutes=0;
-    
-    if (seconds>=60) {
-      minutes = (seconds / 60);
-      seconds %= 60;
-      if (minutes>=60) {
-        hours = minutes / 60;
-        minutes %= 60;
-        if (hours>=24) {
-          days = hours/24;
-          hours %= 24;
-        }
-      }
-    }
-  printf ("\rProcessed %llu MB out of %llu MB %llu MB/s : %llu%% complete. ETA: %03d:%02d:%02d:%02d    ",
-    fs_complete/1000/1000, fs_total/1000/1000, speed/1000/1000, pct, days, hours, minutes, (int)seconds);
-  }
-}
-
-// generate SHA-3 hash of file
-void SHA256_file (char fn[])
-{
-  FILE     *fd;
-  SHA256_CTX ctx;
-  size_t   len;
-  uint8_t  buf[BUFSIZ], dgst[256];
-  struct stat st;
-  uint32_t cmp=0, total=0;
-  
-  fd = fopen (fn, "rb");
-  
-  if (fd!=NULL)
-  {
-    stat (fn, &st);
-    total=st.st_size;
-    
-    SHA256_Init (&ctx);
-    
-    while (len = fread (buf, 1, BUFSIZ, fd)) {
-      cmp += len;
-      if (total > 10000000 && (cmp % 10000000)==0 || cmp==total) {
-        progress (cmp, total);
-      }
-      SHA256_Update (&ctx, buf, len);
-    }
-    SHA256_Final (dgst, &ctx);
-
-    fclose (fd);
-
-    printf ("\n  [ SHA2-256 (%s) = ", fn);
-    SHA256_print (dgst, SHA256_DIGEST_LENGTH);
-  } else {
-    printf ("  [ unable to open %s\n", fn);
-  }
-}
-
-char* getparam (int argc, char *argv[], int *i)
-{
-  int n=*i;
-  if (argv[n][2] != 0) {
-    return &argv[n][2];
-  }
-  if ((n+1) < argc) {
-    *i=n+1;
-    return argv[n+1];
-  }
-  printf ("  [ %c%c requires parameter\n", argv[n][0], argv[n][1]);
-  exit (0);
-}
-
-void usage (void)
-{
-  int i;
-  
-  printf ("\n  usage: //SHA256_test -t <type> -f <file> -s <string>\n");
-  printf ("\n  -k <type>   Key for HMAC");
-  printf ("\n  -s <string> Derive SHA2-256 hash of <string>");
-  printf ("\n  -f <file>   Derive SHA2-256 hash of <file>");
-  printf ("\n  -x          Run tests\n");
-  exit (0);
-}
-
 int main (int argc, char *argv[])
 {
-  char opt;
-  int i, test=0, wc=0;
-  char *file=NULL, *str=NULL, *key=NULL;
-  SHA256_CTX ctx;
-  uint8_t  out[32];
-  uint8_t  word[64];
-  
-  // for each argument
-  for (i=1; i<argc; i++)
-  {
-    // is this option?
-    if (argv[i][0]=='-' || argv[i][1]=='/')
-    {
-      // get option value
-      opt=argv[i][1];
-      switch (opt)
-      {
-        case 's':
-          str=getparam (argc, argv, &i);
-          break;
-        case 'f':
-          file=getparam (argc, argv, &i);
-          break;
-        case 'k':
-          key=getparam (argc, argv, &i);
-          break;
-        case 'x':
-          test=1;
-          break;
-        default:
-          usage ();
-          break;
-      }
-    }
-    // if this is path, set wildcard to true
-    if (wc==0) {
-      wc=i;
-    }
+  if (!run_tests()) {
+    printf ("  [ self-test OK!\n");
   }
-  
-  if (test) {
-    if (!run_tests()) {
-      printf ("\n  [ self-test OK!\n");
-    }
-  } else if (str!=NULL) {
-    SHA256_string (str);
-  } else if (file!=NULL || wc!=0) {
-    if (wc!=0) {
-      while (argv[wc]!=NULL) {
-        SHA256_file (argv[wc++]);
-      }
-    } else {
-      SHA256_file (file);
-    }
-  } else {
-    usage ();
-  }
+
   return 0;
 }

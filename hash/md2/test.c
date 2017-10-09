@@ -158,9 +158,9 @@ int main (int argc, char *argv[])
   
   if (argc < 2) {
     if (!(fails=run_tests())) {
-      printf ("\nSelf-test OK!");
+      printf ("Self-test OK!\n");
     } else {
-      printf ("\nSelf-test failed with %i errors", fails);
+      printf ("Self-test failed with %i errors\n", fails);
     }
     return 0;
   }
