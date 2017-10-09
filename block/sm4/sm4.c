@@ -168,8 +168,7 @@ void sm4_encrypt(sm4_ctx *c, void *buf)
       XCHG(x0, x1);
       XCHG(x1, x2);
       XCHG(x2, x3);
-    }
-    
+    }    
     x[0] = SWAP32(x3); x[1] = SWAP32(x2);
     x[2] = SWAP32(x1); x[3] = SWAP32(x0);
 }

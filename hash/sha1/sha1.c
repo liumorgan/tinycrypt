@@ -30,10 +30,10 @@
 #include "sha1.h"
 
 /************************************************
-*
-* transform a block of data.
-*
-************************************************/
+ *
+ * transform a block of data.
+ *
+ ************************************************/
 void SHA1_Transform (SHA1_CTX *ctx) 
 {
   uint32_t t, i;
@@ -81,10 +81,10 @@ void SHA1_Transform (SHA1_CTX *ctx)
 }
 
 /************************************************
-*
-* initialize context
-*
-************************************************/
+ *
+ * initialize context
+ *
+ ************************************************/
 void SHA1_Init (SHA1_CTX *c) {
   c->len    = 0;
   c->s.w[0] = 0x67452301;
@@ -134,12 +134,12 @@ void SHA1_Final (void* dgst, SHA1_CTX *c)
   
   // see what length we have ere..
   uint32_t len=c->len & (SHA1_CBLOCK - 1);
-  
-  // add the end bit
-  c->buf.b[len++] = 0x80;
-  
+
   // fill remaining space with zeros
   memset (&c->buf.b[len], 0, SHA1_CBLOCK - len);
+  
+  // add the end bit
+  c->buf.b[len] = 0x80;
   
   // if exceeding 56 bytes, transform it
   if (len >= 56) {

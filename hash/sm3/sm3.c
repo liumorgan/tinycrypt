@@ -123,16 +123,16 @@ void SM3_Transform (SM3_CTX *ctx)
 * initialize context
 *
 ************************************************/
-void SM3_Init (SM3_CTX *ctx) {    
-    ctx->s.w[0] = 0x7380166f;
-    ctx->s.w[1] = 0x4914b2b9;
-    ctx->s.w[2] = 0x172442d7;
-    ctx->s.w[3] = 0xda8a0600;
-    ctx->s.w[4] = 0xa96f30bc;
-    ctx->s.w[5] = 0x163138aa;
-    ctx->s.w[6] = 0xe38dee4d;
-    ctx->s.w[7] = 0xb0fb0e4e;
-    ctx->len    = 0;
+void SM3_Init (SM3_CTX *c) {    
+    c->s.w[0] = 0x7380166f;
+    c->s.w[1] = 0x4914b2b9;
+    c->s.w[2] = 0x172442d7;
+    c->s.w[3] = 0xda8a0600;
+    c->s.w[4] = 0xa96f30bc;
+    c->s.w[5] = 0x163138aa;
+    c->s.w[6] = 0xe38dee4d;
+    c->s.w[7] = 0xb0fb0e4e;
+    c->len    = 0;
 }
 
 /************************************************
@@ -140,24 +140,24 @@ void SM3_Init (SM3_CTX *ctx) {
 * update state with input
 *
 ************************************************/
-void SM3_Update (SM3_CTX *ctx, void *in, uint32_t len) {
+void SM3_Update (SM3_CTX *c, void *in, uint32_t len) {
     uint8_t *p = (uint8_t*)in;
     uint32_t r, idx;
     
     if (len==0) return;
     
     // get buffer index
-    idx = ctx->len & (SM3_CBLOCK - 1);
+    idx = c->len & (SM3_CBLOCK - 1);
     
     // update length
-    ctx->len += len;
+    c->len += len;
     
     while (len) {
       r = MIN(len, SM3_CBLOCK - idx);
-      memcpy (&ctx->buf.b[idx], p, r);
+      memcpy (&c->buf.b[idx], p, r);
       if ((idx + r) < SM3_CBLOCK) break;
       
-      SM3_Transform (ctx);
+      SM3_Transform (c);
       len -= r;
       idx = 0;
       p += r;
@@ -169,28 +169,28 @@ void SM3_Update (SM3_CTX *ctx, void *in, uint32_t len) {
 * finalize.
 *
 ************************************************/
-void SM3_Final (void *out, SM3_CTX *ctx)
+void SM3_Final (void *out, SM3_CTX *c)
 {
     int i;
     
     // get the current index
-    uint32_t idx = ctx->len & (SM3_CBLOCK - 1);
+    uint32_t idx = c->len & (SM3_CBLOCK - 1);
     // fill remaining with zeros
-    memset (&ctx->buf.b[idx], 0, SM3_CBLOCK - idx);
+    memset (&c->buf.b[idx], 0, SM3_CBLOCK - idx);
     // add the end bit
-    ctx->buf.b[idx] = 0x80;
+    c->buf.b[idx] = 0x80;
     // if exceeding 56 bytes, transform it
     if (idx >= 56) {
-      SM3_Transform (ctx);
+      SM3_Transform (c);
       // clear buffer
-      memset (ctx->buf.b, 0, SM3_CBLOCK);
+      memset (c->buf.b, 0, SM3_CBLOCK);
     }
     // add total bits
-    ctx->buf.q[7] = SWAP64((uint64_t)ctx->len * 8);
+    c->buf.q[7] = SWAP64((uint64_t)c->len * 8);
     // compress
-    SM3_Transform(ctx);    
+    SM3_Transform(c);    
     // return result
     for (i=0; i<SM3_LBLOCK; i++) {
-      ((uint32_t*)out)[i] = SWAP32(ctx->s.w[i]);
+      ((uint32_t*)out)[i] = SWAP32(c->s.w[i]);
     }
 }
