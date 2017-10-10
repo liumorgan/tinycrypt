@@ -21,7 +21,7 @@ void blkxor (aes_blk *dst, aes_blk *src)
   uint8_t i;
 
   for (i=0; i<AES_BLK_LEN; i++) {
-    dst->b[i] ^= src->b[i];
+    dst->v8[i] ^= src->v8[i];
   }
 }
 
@@ -31,7 +31,7 @@ void blkcpy (aes_blk *dst, aes_blk *src)
   uint8_t i;
 
   for (i=0; i<AES_BLK_LEN; i++) {
-    dst->b[i] = src->b[i];
+    dst->v8[i] = src->v8[i];
   }
 }
 
@@ -41,6 +41,6 @@ void blkclr (aes_blk *blk)
   uint8_t i;
 
   for (i=0; i<AES_BLK_LEN; i++) {
-    blk->b[i] = 0;
+    blk->v8[i] = 0;
   }
 }

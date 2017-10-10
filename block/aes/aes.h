@@ -30,7 +30,7 @@
 #ifndef AES_H
 #define AES_H
 
-#include "../../macros.h"
+#include "macros.h"
 
 #define Nk 8      // key length in words
 #define Nr 14     // number of rounds for 256-bit
@@ -66,7 +66,7 @@ typedef struct _aes_ctx_t {
 extern "C" { 
 #endif
 
-  void aes_enc (aes_ctx*, void*);
+  void aes_enc (void*, void*);
   
   void aes_setkey (aes_ctx*, void*);
   void aes_setkeyx (aes_ctx*, void*);

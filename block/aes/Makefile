@@ -1,6 +1,6 @@
 msvc:
-		cl /nologo /O2 /Ot /DTEST test.c aes.c
-compact:
-		cl /nologo /O2 /Ot /DTEST test.c aes_enc.c
-all:
-		gcc -DTEST -Wall -O2 test.c aes.c -otest	 
+	cl /nologo /DTEST /O2 /Os test.c aes.c
+gnu:	
+	gcc -DTEST -O2 -Os test.c aes.c -otest
+clang:
+	clang -DTEST -O2 -Os test.c aes.c -otest	

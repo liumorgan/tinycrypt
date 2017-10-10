@@ -202,7 +202,7 @@ void SHA256_Final (void* dgst, SHA256_CTX *c)
     int i;
     
     // see what length we have ere..
-    uint64_t len=c->len & (SHA256_CBLOCK - 1);
+    uint32_t len=c->len & (SHA256_CBLOCK - 1);
     // fill remaining with zeros
     memset (&c->buf.b[len], 0, SHA256_CBLOCK - len);
     // add the end bit

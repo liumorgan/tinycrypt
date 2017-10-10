@@ -109,7 +109,8 @@ void swapcpy(
 {
     int i;
     for (i=0; i<4; i++) {
-      ((uint32_t*)dst)[i] = SWAP32(((uint32_t*)src)[i]);
+      ((uint32_t*)dst)[i] = ((uint32_t*)src)[i];
+      //SWAP32(((uint32_t*)src)[i]);
     }
 }
 

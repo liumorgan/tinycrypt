@@ -36,48 +36,48 @@
  ************************************************/
 void SHA1_Transform (SHA1_CTX *ctx) 
 {
-  uint32_t t, i;
-  uint32_t w[80], s[SHA1_LBLOCK];
+    uint32_t t, i;
+    uint32_t w[80], s[SHA1_LBLOCK];
 
-  // copy buffer to local
-  for (i=0; i<16; i++) {
-    w[i] = SWAP32(ctx->buf.w[i]);
-  }
-  
-  // expand it
-  for (i=16; i<80; i++) {
-    w[i] = ROTL32(w[i -  3] ^ 
-                  w[i -  8] ^ 
-                  w[i - 14] ^ 
-                  w[i - 16], 1);
-  }
-  
-  // load state
-  memcpy (s, ctx->s.b, SHA1_DIGEST_LENGTH);
-  
-  // for 80 rounds
-  for (i=0; i<80; i++) {
-    if (i<20) {
-      t = (s[3] ^ (s[1] & (s[2] ^ s[3]))) + 0x5A827999L;
-    } else if (i<40) {
-      t = (s[1] ^ s[2] ^ s[3]) + 0x6ED9EBA1L;
-    } else if (i<60) {
-      t = ((s[1] & s[2]) | (s[3] & (s[1] | s[2]))) + 0x8F1BBCDCL;
-    } else {
-      t = (s[1] ^ s[2] ^ s[3]) + 0xCA62C1D6L;
+    // copy buffer to local
+    for (i=0; i<16; i++) {
+      w[i] = SWAP32(ctx->buf.w[i]);
     }
-    t += ROTL32(s[0], 5) + s[4] + w[i];
-    s[4] = s[3];
-    s[3] = s[2];
-    s[2] = ROTL32(s[1], 30);
-    s[1] = s[0];
-    s[0] = t;
-  }
-  
-  // update state
-  for (i=0; i<SHA1_LBLOCK; i++) {
-    ctx->s.w[i] += s[i];
-  }
+    
+    // expand it
+    for (i=16; i<80; i++) {
+      w[i] = ROTL32(w[i -  3] ^ 
+                    w[i -  8] ^ 
+                    w[i - 14] ^ 
+                    w[i - 16], 1);
+    }
+    
+    // load state
+    memcpy (s, ctx->s.b, SHA1_DIGEST_LENGTH);
+    
+    // for 80 rounds
+    for (i=0; i<80; i++) {
+      if (i<20) {
+        t = (s[3] ^ (s[1] & (s[2] ^ s[3]))) + 0x5A827999L;
+      } else if (i<40) {
+        t = (s[1] ^ s[2] ^ s[3]) + 0x6ED9EBA1L;
+      } else if (i<60) {
+        t = ((s[1] & s[2]) | (s[3] & (s[1] | s[2]))) + 0x8F1BBCDCL;
+      } else {
+        t = (s[1] ^ s[2] ^ s[3]) + 0xCA62C1D6L;
+      }
+      t += ROTL32(s[0], 5) + s[4] + w[i];
+      s[4] = s[3];
+      s[3] = s[2];
+      s[2] = ROTL32(s[1], 30);
+      s[1] = s[0];
+      s[0] = t;
+    }
+    
+    // update state
+    for (i=0; i<SHA1_LBLOCK; i++) {
+      ctx->s.w[i] += s[i];
+    }
 }
 
 /************************************************
@@ -86,12 +86,12 @@ void SHA1_Transform (SHA1_CTX *ctx)
  *
  ************************************************/
 void SHA1_Init (SHA1_CTX *c) {
-  c->len    = 0;
-  c->s.w[0] = 0x67452301;
-  c->s.w[1] = 0xefcdab89;
-  c->s.w[2] = 0x98badcfe;
-  c->s.w[3] = 0x10325476;
-  c->s.w[4] = 0xc3d2e1f0;
+    c->len    = 0;
+    c->s.w[0] = 0x67452301;
+    c->s.w[1] = 0xefcdab89;
+    c->s.w[2] = 0x98badcfe;
+    c->s.w[3] = 0x10325476;
+    c->s.w[4] = 0xc3d2e1f0;
 }
 
 /************************************************
@@ -100,27 +100,27 @@ void SHA1_Init (SHA1_CTX *c) {
  *
  ************************************************/
 void SHA1_Update (SHA1_CTX *c, void *in, uint32_t len) {
-  uint8_t *p = (uint8_t*)in;
-  uint32_t  r, idx;
-  
-  if (len==0) return;
-  
-  // get buffer index
-  idx = c->len & (SHA1_CBLOCK - 1);
-  
-  // update length
-  c->len += len;
-  
-  while (len > 0) {
-    r = MIN(len, SHA1_CBLOCK - idx);
-    memcpy ((void*)&c->buf.b[idx], p, r);
-    if ((idx + r) < SHA1_CBLOCK) break;
+    uint8_t *p = (uint8_t*)in;
+    uint32_t  r, idx;
     
-    SHA1_Transform (c);
-    len -= r;
-    idx = 0;
-    p += r;
-  }
+    if (len==0) return;
+    
+    // get buffer index
+    idx = c->len & (SHA1_CBLOCK - 1);
+    
+    // update length
+    c->len += len;
+    
+    while (len > 0) {
+      r = MIN(len, SHA1_CBLOCK - idx);
+      memcpy ((void*)&c->buf.b[idx], p, r);
+      if ((idx + r) < SHA1_CBLOCK) break;
+      
+      SHA1_Transform (c);
+      len -= r;
+      idx = 0;
+      p += r;
+    }
 }
 
 /************************************************
@@ -130,33 +130,33 @@ void SHA1_Update (SHA1_CTX *c, void *in, uint32_t len) {
  ************************************************/
 void SHA1_Final (void* dgst, SHA1_CTX *c)
 {
-  uint32_t i;
-  
-  // see what length we have ere..
-  uint32_t len=c->len & (SHA1_CBLOCK - 1);
+    uint32_t i;
+    
+    // see what length we have ere..
+    uint32_t len=c->len & (SHA1_CBLOCK - 1);
 
-  // fill remaining space with zeros
-  memset (&c->buf.b[len], 0, SHA1_CBLOCK - len);
-  
-  // add the end bit
-  c->buf.b[len] = 0x80;
-  
-  // if exceeding 56 bytes, transform it
-  if (len >= 56) {
+    // fill remaining space with zeros
+    memset (&c->buf.b[len], 0, SHA1_CBLOCK - len);
+    
+    // add the end bit
+    c->buf.b[len] = 0x80;
+    
+    // if exceeding 56 bytes, transform it
+    if (len >= 56) {
+      SHA1_Transform (c);
+      // clear buffer
+      memset (c->buf.b, 0, SHA1_CBLOCK);
+    }
+    // add total bits
+    c->buf.q[7] = SWAP64(c->len * 8);
+    
+    // compress
     SHA1_Transform (c);
-    // clear buffer
-    memset (c->buf.b, 0, SHA1_CBLOCK);
-  }
-  // add total bits
-  c->buf.q[7] = SWAP64(c->len * 8);
-  
-  // compress
-  SHA1_Transform (c);
-  
-  // swap byte order
-  for (i=0; i<SHA1_LBLOCK; i++) {
-    c->s.w[i] = SWAP32(c->s.w[i]);
-  }
-  // copy digest to buffer
-  memcpy (dgst, c->s.b, SHA1_DIGEST_LENGTH);
+    
+    // swap byte order
+    for (i=0; i<SHA1_LBLOCK; i++) {
+      c->s.w[i] = SWAP32(c->s.w[i]);
+    }
+    // copy digest to buffer
+    memcpy (dgst, c->s.b, SHA1_DIGEST_LENGTH);
 }

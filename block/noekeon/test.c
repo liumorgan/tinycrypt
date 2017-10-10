@@ -61,6 +61,8 @@ int main(void)
   hex2bin (pt2, tv_pt);
   hex2bin (&ctx, tv_key);
     
+  print_bytes("KEY", ctx, 16);
+  
   Noekeon(&ctx, pt1, NOEKEON_ENCRYPT);
   equ = memcmp (pt1, ct, 16)==0;
 

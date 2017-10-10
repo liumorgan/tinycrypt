@@ -106,26 +106,27 @@ int ecb_test (void)
     clen=hex2bin (ct1.b, ecb_ct[i]);
     plen=hex2bin (pt1.b, ecb_tv[i]);
     
-    aes_setkey (&ctx, &key);
-    aes_encrypt (&ctx, &pt1, AES_ENCRYPT);
+    aes_setkeyx (&ctx, &key);
+    aes_encryptx (&ctx, &pt1, AES_ENCRYPT);
+    //aes_enc ((void*)&pt1, (void*)&ctx);
 
     if (memcmp (ct1.b, pt1.b, clen)==0) {
-      printf ("\nEncryption passed test #%i - %08X %08X", 
+      printf ("Encryption passed test #%i - %08X %08X\n", 
         (i+1), pt1.w[0], ct1.w[0]);
       
       plen=hex2bin (pt2.b, ecb_tv[i]);
       
-      aes_encrypt (&ctx, &pt1, AES_DECRYPT);
+      aes_encryptx (&ctx, &pt1, AES_DECRYPT);
       
       if (memcmp (pt1.b, pt2.b, plen)==0) {
-        printf ("\nDecryption OK!");
+        printf ("Decryption OK!\n");
       } else {
-        printf ("\nDecryption failed.. %08X %08X", pt1.w[0], pt2.w[0]);
+        printf ("Decryption failed.. %08X %08X\n", pt1.w[0], pt2.w[0]);
       }
     } else {
       fails++;
-      printf ("\nFailed test #%i : "
-          "Got %08X %08X %08X %08X instead of %08X %08X %08X %08X", (i+1), 
+      printf ("Failed test #%i : "
+          "Got %08X %08X %08X %08X instead of %08X %08X %08X %08X\n", (i+1), 
           pt1.w[0], pt1.w[1], pt1.w[2], pt1.w[3],
           ct1.w[0], ct1.w[1], ct1.w[2], ct1.w[3]);
     }
