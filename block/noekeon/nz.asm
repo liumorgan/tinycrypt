@@ -122,6 +122,7 @@ nk_l0:
     rol    s3, 2
     
     ; Gamma
+    ; s[1] ^= ~((s[3]) | (s[2]));
     mov    t, s3
     or     t, s2
     not    t
