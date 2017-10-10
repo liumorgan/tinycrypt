@@ -29,7 +29,7 @@
   
 #include "noekeon.h"
 
-void noekeon(const void *key, void *data)
+void noekeon(void *key, void *data)
 {
   int      i, j;
   uint32_t t;
@@ -37,7 +37,7 @@ void noekeon(const void *key, void *data)
   uint32_t *s=(uint32_t*)data;
   uint32_t *k=(uint32_t*)key;
 
-  const uint8_t rc_tab[]=   
+  uint8_t rc_tab[]=   
     { 0x80,
       0x1B, 0x36, 0x6C, 0xD8, 
       0xAB, 0x4D, 0x9A, 0x2F, 
@@ -64,7 +64,7 @@ void noekeon(const void *key, void *data)
 
       if (i==Nr) break;
 
-      //Pi1
+      // Pi1
       s[1] = ROTL32(s[1], 1);
       s[2] = ROTL32(s[2], 5);
       s[3] = ROTL32(s[3], 2);
