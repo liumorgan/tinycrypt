@@ -34,14 +34,14 @@
  * transform a block of data.
  *
  ************************************************/
-void SHA1_Transform (SHA1_CTX *ctx) 
+void SHA1_Transform (SHA1_CTX *c) 
 {
     uint32_t t, i;
     uint32_t w[80], s[SHA1_LBLOCK];
 
     // copy buffer to local
     for (i=0; i<16; i++) {
-      w[i] = SWAP32(ctx->buf.w[i]);
+      w[i] = SWAP32(c->buf.w[i]);
     }
     
     // expand it
@@ -53,7 +53,7 @@ void SHA1_Transform (SHA1_CTX *ctx)
     }
     
     // load state
-    memcpy (s, ctx->s.b, SHA1_DIGEST_LENGTH);
+    memcpy (s, c->s.b, SHA1_DIGEST_LENGTH);
     
     // for 80 rounds
     for (i=0; i<80; i++) {
@@ -76,7 +76,7 @@ void SHA1_Transform (SHA1_CTX *ctx)
     
     // update state
     for (i=0; i<SHA1_LBLOCK; i++) {
-      ctx->s.w[i] += s[i];
+      c->s.w[i] += s[i];
     }
 }
 
