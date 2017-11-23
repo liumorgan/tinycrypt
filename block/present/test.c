@@ -2,73 +2,39 @@
 // test unit for PRESENT-128
 // odzhan
 
-#include <stdio.h>
-#include <ctype.h>
-
 #include "present.h"
 
-size_t hex2bin (void *bin, char hex[]) {
-  size_t len, i;
-  int x;
-  uint8_t *p=(uint8_t*)bin;
-  
-  len = strlen (hex);
-  
-  if ((len & 1) != 0) {
-    return 0; 
-  }
-  
-  for (i=0; i<len; i++) {
-    if (isxdigit((int)hex[i]) == 0) {
-      return 0; 
-    }
-  }
-  
-  for (i=0; i<len / 2; i++) {
-    sscanf (&hex[i * 2], "%2x", &x);
-    p[i] = (uint8_t)x;
-  } 
-  return len / 2;
-}
+// Plaintext: 0000000000000000 
+// Given Key (128bit): 0000000000000000 0000000000000000
+uint8_t k00_t00[]=
+{ 0xaf, 0x00, 0x69, 0x2e, 0x2a, 0x70, 0xdb, 0x96 };
 
-// print digest
-void bin2hex (uint8_t dgst[], size_t len)
-{
-  size_t i;
-  for (i=0; i<len; i++) {
-    printf ("%02x", dgst[i]);
-  }
-  putchar ('\n');
-}
+// Plaintext: ffffffffffffffff 
+// Given Key (128bit): ffffffffffffffff ffffffffffffffff
+uint8_t kff_tff[]=
+{ 0xb4, 0xe5, 0x18, 0x42, 0xbd, 0x9f, 0x8d, 0x62 };
 
-char* test(char inputStr[16], char expectedOutputStr[16], char keyStr[32]) {
-  uint8_t     input[8];
-  uint8_t     expectedOutput[8];
-  uint8_t     key[16];
-  int         i;
-  present_ctx ctx;
-  
-  hex2bin(input, inputStr);
-  hex2bin(expectedOutput, expectedOutputStr);
-  hex2bin(key, keyStr);
-
-  present128_setkey(&ctx, key);
-  present128_encrypt(&ctx, input);
-
-  for(i = 0; i < 8; i++) {
-    if(input[i] != expectedOutput[i]) {
-      printf("FAILED : index:%i, %02X != %02X\n", i, input[i], expectedOutput[i]);
-      return "FAILED";
-    }
-  }  
-  return "OK";
-}
+uint8_t *tv[2]={k00_t00, kff_tff};
 
 int main(void)
 {
-  printf("Test e128-k00_t00.txt: %s\n", test("0000000000000000", "96db702a2e6900af", "00000000000000000000000000000000"));
-  printf("Test e128-k00_tff.txt: %s\n", test("ffffffffffffffff", "3c6019e5e5edd563", "00000000000000000000000000000000"));
-  printf("Test e128-kff_t00.txt: %s\n", test("0000000000000000", "13238c710272a5d8", "ffffffffffffffffffffffffffffffff"));
-  printf("Test e128-kff_tff.txt: %s\n", test("ffffffffffffffff", "628d9fbd4218e5b4", "ffffffffffffffffffffffffffffffff"));
+  present_ctx ctx;
+  uint8_t     buf[8];   // 64-bit plaintext
+  uint8_t     key[16];  // 128-bit key
+  int         i, equ;
+  
+  for (i=0; i<2; i++) {
+    // if using alternative test vectors, remember to change these!
+    memset(key, -i, sizeof(key));  
+    memset(buf, -i, sizeof(buf));
+  
+    present128_setkeyx(&ctx, key);
+    present128_encryptx(&ctx, buf);
+    //present128_encryptx(key, buf);
+    
+    equ = memcmp (buf, tv[i], 8)==0;
+    printf ("\nEncryption test #%i %s", (i+1), 
+        equ ? "PASSED" : "FAILED");
+  }
   return 0;
 }

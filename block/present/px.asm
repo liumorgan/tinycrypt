@@ -139,7 +139,6 @@ pse_l1:
     ;
     mov     ebx, 0x30201000  ; r   = 0x30201000;
     xor     ebp, ebp
-    mov     cl, 64
 pse_l2:
     shr     rax, 1           ; CF = (p.q >> j) & 1
     jnc     pse_l3           ; no bit carried
@@ -147,7 +146,9 @@ pse_l2:
 pse_l3:    
     inc     bl               ; r = ROTR32(r+1, 8);
     ror     ebx, 8
-    loop    pse_l2
+
+    add     cl, 4            ; j++
+    jne     pse_l2
 
     xchg    rax, rbp         ; p.q = t.q 
     pop     rcx
