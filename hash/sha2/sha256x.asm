@@ -30,7 +30,7 @@
 ; -----------------------------------------------
 ; SHA-256 stream cipher in x86 assembly
 ;
-; size: 662 bytes, 629 using dynamic constants
+; size: 650 bytes, 598 using dynamic constants
 ;
 ; global calls use cdecl convention
 ;
@@ -59,7 +59,7 @@ endstruc
   global _SHA256_Finalx
 %endif
 
-%define DYNAMIC
+;%define DYNAMIC
 
 ; Initialize hash values:
 ; (first 32 bits of the fractional parts of the square 
@@ -68,24 +68,65 @@ SHA256_Initx:
 _SHA256_Initx:
     pushad
 %ifdef DYNAMIC
-    call   init_fpu
+init_fpu:
+    ; round numbers down
+    push   eax
+    fstcw  [esp]            ; store control word
+    pop    eax
+    or     ah, 4            ; set round down bit
+    and    ah, 0f7h         ; clear bit
+    push   eax
+    fldcw  [esp]            ; load control word
+    pop    eax
 %endif
     mov    edi, [esp+32+4]
     ; ctx->len = 0;
     xor    eax, eax
     stosd
-    stosd
+    stosd ;32-bit code can't use 64-bit length, but we need this for alignment
     
 %ifdef DYNAMIC
 %define i  ecx
 
-    xor    i, i
+    push   8
+    pop    i
+sqrt2int:
+    call   sqr_primes
+
+primes dw 2, 3, 5, 7, 11, 13, 17, 19, 
+       dw 23, 29, 31, 37, 41, 43, 47, 53
+       dw 59, 61, 67, 71, 73, 79, 83, 89
+       dw 97, 101, 103, 107, 109, 113, 127, 131
+       dw 137, 139, 149, 151, 157, 163, 167, 173 
+       dw 179, 181, 191, 193, 197, 199, 211, 223 
+       dw 227, 229, 233, 239, 241, 251, 257, 263
+       dw 269, 271, 277, 281, 283, 293, 307, 311
+primes_len equ $-primes
+    
+sqr_primes:
+    pop    esi
 load_state:
-    call   sqrt2int
+    ; get square root of number in eax 
+    ; return 32-bit fractional part as integer
+    push   1
+    xor    eax, eax
+    push   eax
+    fild   qword[esp]   ; load 2^32
+    lodsw
+    push   eax
+    fild   dword[esp]   ; load integer
+    push   eax
+    fsqrt
+    fld1                ; load 1 
+    fsubp  st1, st0     ; subtract to get fractional part
+    fmulp  st1, st0     ; multiply fractional part by 2^32
+    frndint
+    fistp  qword[esp]
+    pop    eax 
+    add    esp, 3*4         ; release 2^32 on stack
+
     stosd
-    inc    i
-    cmp    i, 8
-    jnz    load_state
+    loop   load_state
 %else
     ; ctx->h[0] = 0x6a09e667
     mov    eax, 06a09e667h
@@ -135,7 +176,7 @@ _SHA256_Updatex:
     ; limit of (2^32)-1 bytes each update
     ; ctx->len += len;
     add    dword[ebx+len+0], eax
-    adc    dword[ebx+len+4], 0
+;;    adc    dword[ebx+len+4], 0 ;32-bit code can't use 64-bit length
     
 upd_l1:
     ; r = (len >= (SHA256_CBLOCK - idx)) ? SHA256_CBLOCK - idx : len;
@@ -154,7 +195,10 @@ upd_l1:
     ; if ((idx + r) < SHA256_CBLOCK) break;
     cmp    edx, SHA256_CBLOCK
     jb     ex_upd
+    push   esi
+    lea    esi, [ebx+state]
     call   _SHA256_Transformx
+    pop    esi
     cdq
     jmp    upd_l1
 
@@ -162,39 +206,45 @@ upd_l1:
 SHA256_Finalx:
 _SHA256_Finalx:
     pushad
-    mov    ebx, [esp+32+8] ; ctx
+    mov    esi, [esp+32+8] ; ctx
     ; uint64_t len=ctx->len & SHA256_CBLOCK - 1;
-    mov    eax, [ebx+len+0]
-    and    eax, SHA256_CBLOCK - 1
+    lodsd
+    push   eax
+    push   SHA256_CBLOCK - 1
+    pop    ecx
+    and    eax, ecx
     cdq
     ; memset (&ctx->buffer[len], 0, SHA256_CBLOCK - len);
-    lea    edi, [ebx+buffer+eax]
-    push   SHA256_CBLOCK
-    pop    ecx
+    lea    edi, [esi+buffer-4]
+    push   edi
+    add    edi, eax
     sub    ecx, eax
+    cmp    eax, 56
+    lodsd
+    xchg   ebp, eax
+    ; ctx->buffer[len] = 0x80;
+    mov    al, 80h
+    stosb
     xchg   eax, edx
     rep    stosb
-    ; ctx->buffer[len] = 0x80;
-    mov    byte[ebx+buffer+edx], 80h
+    pop    edi
     ; if (len >= 56)
-    cmp    edx, 56
     jb     calc_len
     ; SHA256_Transform (ctx);
     call   _SHA256_Transformx
     ; memset (ctx->buffer, 0, SHA256_CBLOCK);
-    lea    edi, [ebx+buffer]
     mov    cl, SHA256_CBLOCK/4
     rep    stosd
 calc_len:
     ; ctx->buf.v64[7] = SWAP64(ctx->len * 8);
-    mov    eax, [ebx+len+0]
-    mov    edx, [ebx+len+4]
+    pop    eax
+;;    shld   ebp, eax, 3 ;32-bit code can't use 64-bit length
     mov    cl, SHA256_LBLOCK
     mul    ecx
     bswap  eax
-    bswap  edx
-    mov    dword[ebx+buffer+7*8+0], edx
-    mov    dword[ebx+buffer+7*8+4], eax
+;;    bswap  ebp ;32-bit code can't use 64-bit length
+    mov    dword[esi+buffer+7*8-8], ebp
+    mov    dword[esi+buffer+7*8-4], eax
     ; SHA256_Transform(ctx);
     call   _SHA256_Transformx
     ; for (i=0; i<SHA256_LBLOCK; i++) {
@@ -202,7 +252,6 @@ calc_len:
     ; }
     ;
     ; memcpy (dgst, ctx->s.v8, SHA256_DIGEST_LENGTH);
-    lea    esi, [ebx+state]
     mov    edi, [esp+32+4] ; dgst
 swap_words:
     lodsd
@@ -231,7 +280,6 @@ swap_words:
 _SHA256_Transformx:
     pushad
     
-    lea    esi, [ebx+state]
     push   esi
     
     xor    ecx, ecx
@@ -410,55 +458,6 @@ cbr_primes:
     fistp  qword[esp]   ; save integer
     pop    eax
     add    esp, 3*4         ; release stack
-    mov    [esp+1ch], eax
-    popad
-    ret
-
-init_fpu:
-    ; round numbers down
-    push   eax
-    fstcw  [esp]            ; store control word
-    pop    eax
-    or     ah, 4            ; set round down bit
-    and    ah, 0f7h         ; clear bit
-    push   eax
-    fldcw  [esp]            ; load control word
-    pop    eax
-    ret
-    
-sqrt2int:
-    pushad
-    call   sqr_primes
-
-primes dw 2, 3, 5, 7, 11, 13, 17, 19, 
-       dw 23, 29, 31, 37, 41, 43, 47, 53
-       dw 59, 61, 67, 71, 73, 79, 83, 89
-       dw 97, 101, 103, 107, 109, 113, 127, 131
-       dw 137, 139, 149, 151, 157, 163, 167, 173 
-       dw 179, 181, 191, 193, 197, 199, 211, 223 
-       dw 227, 229, 233, 239, 241, 251, 257, 263
-       dw 269, 271, 277, 281, 283, 293, 307, 311
-primes_len equ $-primes
-    
-sqr_primes:
-    pop    esi
-    ; get square root of number in eax 
-    ; return 32-bit fractional part as integer
-    push   1
-    push   0
-    fild   qword[esp]   ; load 2^32
-    movzx  eax, word[esi+2*i]
-    push   eax
-    fild   dword[esp]   ; load integer
-    push   eax
-    fsqrt
-    fld1                ; load 1 
-    fsubp  st1, st0     ; subtract to get fractional part
-    fmulp  st1, st0     ; multiply fractional part by 2^32
-    frndint
-    fistp  qword[esp]
-    pop    eax 
-    add    esp, 3*4         ; release 2^32 on stack
     mov    [esp+1ch], eax
     popad
     ret
