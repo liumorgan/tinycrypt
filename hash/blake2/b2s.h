@@ -30,9 +30,7 @@
 #ifndef B2s_H
 #define B2s_H
 
-#include <stdint.h>
-
-#include "macros.h"
+#include "../../macros.h"
 
 #define BLAKE2s_CBLOCK        64
 #define BLAKE2s_DIGEST_LENGTH 32

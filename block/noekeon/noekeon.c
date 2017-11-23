@@ -33,24 +33,25 @@ void Theta(
     uint32_t *a, 
     const uint32_t *k)
 {
-    uint32_t t, i;
+  uint32_t t, i;
 
-    t = a[0] ^ a[2]; 
-    
-    t ^= ROTR32(t, 8) ^ ROTL32(t, 8);
-    
-    a[1] ^= t;
-    a[3] ^= t;
-    
-    for (i=0; i<4; i++) {
-      a[i] ^= k[i];
-    }
+  t = a[0] ^ a[2]; 
+  
+  t ^= ROTR32(t, 8) ^ ROTL32(t, 8);
+  
+  a[1] ^= t;
+  a[3] ^= t;
+  
+  for (i=0; i<4; i++) {
+    a[i] ^= k[i];
+  }
 
-    t = a[1] ^ a[3]; 
-    t ^= ROTR32(t, 8) ^ ROTL32(t, 8);
-    
-    a[0] ^= t;
-    a[2] ^= t;
+  t = a[1] ^ a[3]; 
+  t ^= ROTR32(t, 8) ^ ROTL32(t, 8);
+  
+  a[0] ^= t;
+  a[2] ^= t;  
+
 }
 
 void Round(
@@ -107,11 +108,10 @@ void swapcpy(
     void *dst, 
     const void *src)
 {
-    int i;
-    for (i=0; i<4; i++) {
-      ((uint32_t*)dst)[i] = ((uint32_t*)src)[i];
-      //SWAP32(((uint32_t*)src)[i]);
-    }
+  int i;
+  for (i=0; i<4; i++) {
+    ((uint32_t*)dst)[i] = SWAP32(((uint32_t*)src)[i]);
+  }
 }
 
 void Noekeon(
@@ -119,25 +119,25 @@ void Noekeon(
     void *buf, 
     int enc)
 {
-    int i;
+  int i;
 
-    uint32_t NullVector[4], State[4], Key[4];
-    
-    swapcpy(Key, k);
-    swapcpy(State, buf);
+  uint32_t NullVector[4], State[4], Key[4];
+  
+  swapcpy(Key, k);
+  swapcpy(State, buf);
 
-    if (enc==NOEKEON_ENCRYPT)
-    {
-      for (i=0; i<=Nr; i++) {
-        Round(State, Key, enc, i, i==Nr);
-      }
-    } else {
-      memset(NullVector, 0, 16);
-      Theta(Key, NullVector);
-
-      for (i=Nr; i>=0; --i) {
-        Round(State, Key, enc, i, i==0);
-      }
+  if (enc==NOEKEON_ENCRYPT)
+  {
+    for (i=0; i<=Nr; i++) {
+      Round(State, Key, enc, i, i==Nr);
     }
-    swapcpy(buf, State);
+  } else {
+    memset(NullVector, 0, 16);
+    Theta(Key, NullVector);
+
+    for (i=Nr; i>=0; --i) {
+      Round(State, Key, enc, i, i==0);
+    }
+  }
+  swapcpy(buf, State);
 }

@@ -1,5 +1,5 @@
 ;
-;  Copyright © 2016 Odzhan, Peter Ferrie. All Rights Reserved.
+;  Copyright © 2016, 2017 Odzhan, Peter Ferrie. All Rights Reserved.
 ;
 ;  Redistribution and use in source and binary forms, with or without
 ;  modification, are permitted provided that the following conditions are
@@ -30,7 +30,7 @@
 ; -----------------------------------------------
 ; Modular Exponetiation in x86 assembly
 ;
-; size: 137 bytes or 140 for slightly faster version
+; size: 135 bytes or 138 for slightly faster version
 ;
 ; global calls use cdecl convention
 ;
@@ -67,26 +67,23 @@ mulmod:
     pushad                   ; save registers
 ; cf=1 : r = mulmod (r, t, m);
 ; cf=0 : t = mulmod (t, t, m);
-    push    edi               ; save edi
+    push   edi               ; save edi
     ; r=x
-    sub     esp, ecx          ; create space for r and assign x
-    mov     edi, esp
-    pushad
-    dec     ecx               ; skip 1
-    xchg    eax, edx          ; r=x
-    stosb
-    xor     al, al            ; zero remainder of buffer
-    rep     stosb
-    popad
-    ; *************
+    sub    esp, ecx          ; create space for r and assign x
     ; t=b
-    sub     esp, ecx          ; create space for t and assign b
-    mov     eax, esp
+    sub    esp, ecx          ; create space for t and assign b
+    mov    edi, esp
+    push   ecx
+    rep    movsb
+    pop    ecx
+    mov    esi, esp
     pushad
-    xchg    eax, edi
-    rep     movsb
+    dec    ecx               ; skip 1
+    xchg   eax, edx          ; r=x
+    stosb
+    xor    al, al            ; zero remainder of buffer
+    rep    stosb
     popad
-    xchg    eax, esi          
     call    ld_fn
     
 ; cf=1 : r = addmod (r, t, m);

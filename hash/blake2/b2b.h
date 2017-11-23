@@ -30,9 +30,7 @@
 #ifndef B2b_H
 #define B2b_H
 
-#include <stdint.h>
-
-#include "macros.h"
+#include "../../macros.h"
 
 #define BLAKE2b_CBLOCK        128
 #define BLAKE2b_DIGEST_LENGTH 64

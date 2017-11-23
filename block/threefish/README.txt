@@ -3,14 +3,17 @@
 Designers         Bruce Schneier, Niels Ferguson, 
                   Stefan Lucks, Doug Whiting, 
                   Mihir Bellare, Tadayoshi Kohno, 
-                  Jon Callas, Jesse Walker            
+                  Jon Callas, Jesse Walker
+            
 First published   2008
 Related to        Blowfish, Twofish
 Key sizes         256, 512 or 1024 bits
 Block sizes       256, 512 or 1024 bits
 Rounds            72 (80 for 1024-bit block size)
 
-  Copyright (C) 2017 Odzhan. All Rights Reserved.
+  Copyright (C) 2017 Odzhan
+
+  All Rights Reserved.
 
   Redistribution and use in source and binary forms, with or without
   modification, are permitted provided that the following conditions are

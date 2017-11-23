@@ -1,93 +1,165 @@
+/*
+   SipHash reference C implementation
 
-// not working, don't use
+   Copyright (c) 2012-2016 Jean-Philippe Aumasson
+   <jeanphilippe.aumasson@gmail.com>
+   Copyright (c) 2012-2014 Daniel J. Bernstein <djb@cr.yp.to>
 
-#include "siphash.h"
+   To the extent possible under law, the author(s) have dedicated all copyright
+   and related and neighboring rights to this software to the public domain
+   worldwide. This software is distributed without any warranty.
 
-static void sipround(uint64_t* v0, uint64_t* v1, 
-  uint64_t* v2, uint64_t* v3)
-{
-  *v0 += *v1;
-  *v1 = ROTL64(*v1, 13);
-  *v1 ^= *v0;
-  *v0 = ROTL64(*v0, 32);
+   You should have received a copy of the CC0 Public Domain Dedication along
+   with
+   this software. If not, see
+   <http://creativecommons.org/publicdomain/zero/1.0/>.
+ */
+#include <assert.h>
+#include <stdint.h>
+#include <stdio.h>
+#include <string.h>
 
-  *v2 += *v3;
-  *v3 = ROTL64(*v3, 16);
-  *v3 ^= *v2;
+/* default: SipHash-2-4 */
+#define cROUNDS 2
+#define dROUNDS 4
 
-  *v2 += *v1;
-  *v1 = ROTL64(*v1, 17);
-  *v1 ^= *v2;
-  *v2 = ROTL64(*v2, 32);
+#define ROTL(x, b) (uint64_t)(((x) << (b)) | ((x) >> (64 - (b))))
 
-  *v0 += *v3;
-  *v3 = ROTL64(*v3, 21);
-  *v3 ^= *v0;
+#define U32TO8_LE(p, v)                                                        \
+    (p)[0] = (uint8_t)((v));                                                   \
+    (p)[1] = (uint8_t)((v) >> 8);                                              \
+    (p)[2] = (uint8_t)((v) >> 16);                                             \
+    (p)[3] = (uint8_t)((v) >> 24);
+
+#define U64TO8_LE(p, v)                                                        \
+    U32TO8_LE((p), (uint32_t)((v)));                                           \
+    U32TO8_LE((p) + 4, (uint32_t)((v) >> 32));
+
+#define U8TO64_LE(p)                                                           \
+    (((uint64_t)((p)[0])) | ((uint64_t)((p)[1]) << 8) |                        \
+     ((uint64_t)((p)[2]) << 16) | ((uint64_t)((p)[3]) << 24) |                 \
+     ((uint64_t)((p)[4]) << 32) | ((uint64_t)((p)[5]) << 40) |                 \
+     ((uint64_t)((p)[6]) << 48) | ((uint64_t)((p)[7]) << 56))
+
+#define SIPROUND                                                               \
+    do {                                                                       \
+        v0 += v1;                                                              \
+        v1 = ROTL(v1, 13);                                                     \
+        v1 ^= v0;                                                              \
+        v0 = ROTL(v0, 32);                                                     \
+        v2 += v3;                                                              \
+        v3 = ROTL(v3, 16);                                                     \
+        v3 ^= v2;                                                              \
+        v0 += v3;                                                              \
+        v3 = ROTL(v3, 21);                                                     \
+        v3 ^= v0;                                                              \
+        v2 += v1;                                                              \
+        v1 = ROTL(v1, 17);                                                     \
+        v1 ^= v2;                                                              \
+        v2 = ROTL(v2, 32);                                                     \
+    } while (0)
+
+#ifdef DEBUG
+#define TRACE                                                                  \
+    do {                                                                       \
+        printf("(%3d) v0 %08x %08x\n", (int)inlen, (uint32_t)(v0 >> 32),       \
+               (uint32_t)v0);                                                  \
+        printf("(%3d) v1 %08x %08x\n", (int)inlen, (uint32_t)(v1 >> 32),       \
+               (uint32_t)v1);                                                  \
+        printf("(%3d) v2 %08x %08x\n", (int)inlen, (uint32_t)(v2 >> 32),       \
+               (uint32_t)v2);                                                  \
+        printf("(%3d) v3 %08x %08x\n", (int)inlen, (uint32_t)(v3 >> 32),       \
+               (uint32_t)v3);                                                  \
+    } while (0)
+#else
+#define TRACE
+#endif
+
+int siphash(const uint8_t *in, const size_t inlen, const uint8_t *k,
+            uint8_t *out, const size_t outlen) {
+
+    assert((outlen == 8) || (outlen == 16));
+    uint64_t v0 = 0x736f6d6570736575ULL;
+    uint64_t v1 = 0x646f72616e646f6dULL;
+    uint64_t v2 = 0x6c7967656e657261ULL;
+    uint64_t v3 = 0x7465646279746573ULL;
+    uint64_t k0 = U8TO64_LE(k);
+    uint64_t k1 = U8TO64_LE(k + 8);
+    uint64_t m;
+    int i;
+    const uint8_t *end = in + inlen - (inlen % sizeof(uint64_t));
+    const int left = inlen & 7;
+    uint64_t b = ((uint64_t)inlen) << 56;
+    v3 ^= k1;
+    v2 ^= k0;
+    v1 ^= k1;
+    v0 ^= k0;
+
+    if (outlen == 16)
+        v1 ^= 0xee;
+
+    for (; in != end; in += 8) {
+        m = U8TO64_LE(in);
+        v3 ^= m;
+
+        TRACE;
+        for (i = 0; i < cROUNDS; ++i)
+            SIPROUND;
+
+        v0 ^= m;
+    }
+
+    switch (left) {
+    case 7:
+        b |= ((uint64_t)in[6]) << 48;
+    case 6:
+        b |= ((uint64_t)in[5]) << 40;
+    case 5:
+        b |= ((uint64_t)in[4]) << 32;
+    case 4:
+        b |= ((uint64_t)in[3]) << 24;
+    case 3:
+        b |= ((uint64_t)in[2]) << 16;
+    case 2:
+        b |= ((uint64_t)in[1]) << 8;
+    case 1:
+        b |= ((uint64_t)in[0]);
+        break;
+    case 0:
+        break;
+    }
+
+    v3 ^= b;
+
+    TRACE;
+    for (i = 0; i < cROUNDS; ++i)
+        SIPROUND;
+
+    v0 ^= b;
+
+    if (outlen == 16)
+        v2 ^= 0xee;
+    else
+        v2 ^= 0xff;
+
+    TRACE;
+    for (i = 0; i < dROUNDS; ++i)
+        SIPROUND;
+
+    b = v0 ^ v1 ^ v2 ^ v3;
+    U64TO8_LE(out, b);
+
+    if (outlen == 8)
+        return 0;
+
+    v1 ^= 0xdd;
+
+    TRACE;
+    for (i = 0; i < dROUNDS; ++i)
+        SIPROUND;
+
+    b = v0 ^ v1 ^ v2 ^ v3;
+    U64TO8_LE(out + 8, b);
+
+    return 0;
 }
-
-void siphash24(uint8_t* out, void const* in, int inlen, uint8_t const* key)
-{
-  uint64_t k0, k1, v0, v1, v2, v3, x, b=inlen;
-  int c, r, i, len=inlen;
-  uint8_t *p=(uint8_t*)in;
-  
-  b <<= 56;
-  
-  k0=((uint64_t*)key)[0];
-  k1=((uint64_t*)key)[1];
-  
-  v0 = k0 ^ 0x736F6D6570736575ULL;
-  v1 = k1 ^ 0x646F72616E646F6DULL;
-  v2 = k0 ^ 0x6C7967656E657261ULL;
-  v3 = k1 ^ 0x7465646279746573ULL;
-
-  while (len>=0)
-  {
-    // get bytes from buffer.
-    x=0;
-    r=(len<8) ? len : 8;
-    for (i=0; i<r; i++) {
-      x |= *p++;
-      x  = ROTR64(x, 8);
-    }
-    // last block is uneven?
-    if (r & 7) 
-    {
-      x = ROTL64(x, ((r & 7) << 3));
-      x |= b;
-      printf ("\nI've got %016llX", x);
-    }
-rnd_loop:
-    // subtract number of bytes in x from total len
-    len -= r;
-    // call sipround 2 times
-    c=2;
-    // if length is less than zero, this is last call
-    if (len<0) 
-    { 
-      // so xor v2 by 255 and call sipround 4 times
-      v2 ^= 0xFF; 
-      c=4; 
-      printf ("\nI've got b=%016llX and v0=%llX v1=%llX v2=%llX v3=%llX", b, v0, v1, v2, v3);
-    } else {
-      // else xor v3 by bytes in x
-      v3  ^= x;
-    }
-    // call sipround 2 or 4 times depending on c
-    for (i=0; i<c; i++) {
-      sipround(&v0, &v1, &v2, &v3);
-    }
-    // if c is 2, xor v0 by bytes in x
-    if (c==2) {
-      v0 ^= x;
-    }
-    // all blocks processed?
-    if (len == 0) {
-      printf ("\nok");
-      x=b;
-      goto rnd_loop;
-    }
-  }
-  ((uint64_t*)out)[0] = v0 ^ v1 ^ v2 ^ v3;
-}
-

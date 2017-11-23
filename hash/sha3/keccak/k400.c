@@ -56,55 +56,55 @@ uint16_t rc (uint8_t *LFSR)
 
 void k400_permute (void *state)
 {
-  int     i, j, rnd, r;
-  uint16_t t, bc[5];
-  uint8_t  lfsr=1;
-  uint16_t *st=(uint16_t*)state;
+    int     i, j, rnd;
+    uint16_t t, u, bc[5];
+    uint8_t  r, lfsr=1;
+    uint16_t *st=(uint16_t*)state;
   
-const uint8_t keccakf_piln[24] = 
-{ 10, 7,  11, 17, 18, 3, 5,  16, 8,  21, 24, 4, 
-  15, 23, 19, 13, 12, 2, 20, 14, 22, 9,  6,  1  };
-
-const uint8_t m5[10] = 
-{ 0, 1, 2, 3, 4, 0, 1, 2, 3, 4 };
+    uint8_t p[24] = 
+    { 10, 7,  11, 17, 18, 3, 5,  16, 8,  21, 24, 4, 
+      15, 23, 19, 13, 12, 2, 20, 14, 22, 9,  6,  1  };
+      
+    uint8_t m[9] = 
+    { 0, 1, 2, 3, 4, 0, 1, 2, 3};
   
-  for (rnd=0; rnd<20; rnd++) 
-  {
-    // Theta
-    for (i=0; i<5; i++) {     
-      bc[i] = st[i] 
-            ^ st[i +  5] 
-            ^ st[i + 10] 
-            ^ st[i + 15] 
-            ^ st[i + 20];
-    }
-    for (i=0; i<5; i++) {
-      t = bc[m5[(i + 4)]] ^ ROTL16(bc[m5[(i + 1)]], 1);
-      for (j=0; j<25; j+=5) {
-        st[j + i] ^= t;
-      }
-    }
-    // Rho Pi
-    t = st[1];
-    for (i=0, r=0; i<24; i++) {
-      r += i + 1;
-      j = keccakf_piln[i];
-      bc[0] = st[j];
-      st[j] = ROTL16(t, r & 15);
-      t = bc[0];
-    }
-    // Chi
-    for (j=0; j<25; j+=5) {
+    for (rnd=0; rnd<20; rnd++) {
+      // Theta
       for (i=0; i<5; i++) {
-        bc[i] = st[j + i];
+        t  = st[i   ];
+        t ^= st[i+ 5];      
+        t ^= st[i+10];      
+        t ^= st[i+15];      
+        t ^= st[i+20];
+        bc[i] = t;
       }
       for (i=0; i<5; i++) {
-        st[j + i] ^= (~bc[m5[(i + 1)]]) & bc[m5[(i + 2)]];
+        t  = bc[m[(i + 4)]]; 
+        t ^= ROTL16(bc[m[(i + 1)]], 1);
+        for (j=i; j<25; j+=5) {
+          st[j] ^= t;
+        }
       }
+      // Rho + Pi
+      u = st[1];
+      for (i=0, r=0; i<24; i++) {
+        r += i + 1;
+        u  = ROTL16(u, r & 15);
+        XCHG(st[p[i]], u);
+        bc[0] = u;
+      }
+      // Chi
+      for (i=0; i<25; i+=5) {
+        memcpy(&bc, &st[i], 5*2);
+        for (j=0; j<5; j++) {
+          t  = ~bc[m[(j + 1)]];
+          t &=  bc[m[(j + 2)]];
+          st[j + i] ^= t;
+        }
+      }
+      // Iota
+      st[0] ^= rc(&lfsr);
     }
-    // Iota
-    st[0] ^= rc(&lfsr);
-  }
 }
 
 #ifdef TEST
@@ -130,30 +130,30 @@ uint8_t tv2[]={
   0x7c,0x09 };
   
 void bin2hex(uint8_t x[], int len) {
-  int i;
-  for (i=0; i<len; i++) {
-    if ((i & 7)==0) putchar('\n');
-    printf ("0x%02x,", x[i]);
-  }
-  putchar('\n');
+    int i;
+    for (i=0; i<len; i++) {
+      if ((i & 7)==0) putchar('\n');
+      printf ("0x%02x,", x[i]);
+    }
+    putchar('\n');
 }
   
 int main(void)
 {
-  uint8_t  out[50];
-  int      equ;
-  
-  memset(out, 0, sizeof(out));
-  
-  k400_permute(out);
-  equ = memcmp(out, tv1, sizeof(tv1))==0;
-  printf("Test 1 %s\n", equ ? "OK" : "Failed"); 
-  //bin2hex(out, 50);
+    uint8_t  out[50];
+    int      equ;
+    
+    memset(out, 0, sizeof(out));
+    
+    k400_permute(out);
+    equ = memcmp(out, tv1, sizeof(tv1))==0;
+    printf("Test 1 %s\n", equ ? "OK" : "Failed"); 
+    //bin2hex(out, 50);
 
-  k400_permute(out);
-  equ = memcmp(out, tv2, sizeof(tv2))==0;
-  printf("Test 2 %s\n", equ ? "OK" : "Failed");
-  //bin2hex(out, 50);
-  return 0;
+    k400_permute(out);
+    equ = memcmp(out, tv2, sizeof(tv2))==0;
+    printf("Test 2 %s\n", equ ? "OK" : "Failed");
+    //bin2hex(out, 50);
+    return 0;
 }
 #endif

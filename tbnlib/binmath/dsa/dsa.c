@@ -52,6 +52,7 @@ int main (int argc, char *argv[])
   // y = g ^ x % p
   y=powmod (g, x, p);
   
+  y = 0x7632D; x = 0x628A5;
   printf ("\n\npublic key = %llX\nPrivate key = %llX", y, x);
   
   H=hex2bin(m);

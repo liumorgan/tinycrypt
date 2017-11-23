@@ -34,6 +34,13 @@
 
 #define CC20_BLK_LEN 64
 
+
+typedef union _w512_t {
+  uint8_t b[64];
+  uint32_t w[16];
+  uint64_t q[8];
+} w512_t;
+
 typedef union _cc20_blk_t {
   uint8_t  b[CC20_BLK_LEN];
   uint32_t w[CC20_BLK_LEN/4];
@@ -55,6 +62,8 @@ extern "C" {
   // encrypt or decrypt stream of bytes
   void cc20_encrypt(uint32_t, void*, cc20_ctx*);
   void cc20_encryptx(uint32_t, void*, cc20_ctx*);
+  
+  void xchacha20(uint32_t, void*, w512_t*);
   
 #ifdef __cplusplus
 }

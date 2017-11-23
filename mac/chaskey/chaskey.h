@@ -36,11 +36,6 @@ typedef union state_t {
   uint8_t  b[16];
   uint32_t w[4];
 } state;
-
-#ifdef USE_ASM
-#define chas_setkey(x, y) chas_setkeyx(x, y)
-#define chas_mac(w, x, y, z) chas_macx(w, x, y, z)
-#endif
  
 #ifdef __cplusplus
 extern "C" {

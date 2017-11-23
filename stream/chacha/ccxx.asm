@@ -228,7 +228,8 @@ cc_l0:
 cc_l1:
     mov     dl, byte[rbx+rax]
     xor     byte[rsi+rax], dl ; p[idx] ^= stream[idx]
-    sub     edx, 1
+    inc     al
+    cmp     al, 64
     loopnz  cc_l1             ; --len
     jmp     cc_l0
 cc_l2:

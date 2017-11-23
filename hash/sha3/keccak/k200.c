@@ -31,64 +31,75 @@
 
 void k200_permute (void *state)
 {
-  uint8_t i, j, rnd, r, t, bc[5];
-  uint8_t *st = (uint8_t*)state;
+    uint32_t i, j, rnd;
+    uint8_t  t, r, u, bc[5];
+    uint8_t  *st = (uint8_t*)state;
   
-const uint8_t rc[]={
-  0x01,0x82,0x8a,0x00,0x8b,0x01,0x81,0x09,0x8a,
-  0x88,0x09,0x0a,0x8b,0x8b,0x89,0x03,0x02,0x80};
+    uint8_t rc[18]=
+    { 0x01, 0x82, 0x8a, 0x00, 0x8b, 0x01, 0x81, 0x09, 0x8a,
+      0x88, 0x09, 0x0a, 0x8b, 0x8b, 0x89, 0x03, 0x02, 0x80 };
+      
+    uint8_t p[24] = 
+    { 10, 7,  11, 17, 18, 3, 5,  16, 8,  21, 24, 4, 
+      15, 23, 19, 13, 12, 2, 20, 14, 22, 9,  6,  1  };
+      
+    uint8_t m[9] = 
+    { 0, 1, 2, 3, 4, 0, 1, 2, 3};
   
-const uint8_t keccakf_piln[24] = 
-{ 10, 7,  11, 17, 18, 3, 5,  16, 8,  21, 24, 4, 
-  15, 23, 19, 13, 12, 2, 20, 14, 22, 9,  6,  1  };
-  
-const uint8_t m5[10] = 
-{ 0, 1, 2, 3, 4, 0, 1, 2, 3, 4 };
-  
-  for (rnd=0; rnd<18; rnd++) 
-  {
-    // Theta
-    for (i=0; i<5; i++) {     
-      t  = st[i     ]; 
-      t ^= st[i +  5]; 
-      t ^= st[i + 10]; 
-      t ^= st[i + 15]; 
-      t ^= st[i + 20];
-      bc[i] = t;
-    }
-    for (i=0; i<5; i++) {
-      t  = bc[m5[(i + 4)]]; 
-      t ^= ROTL8(bc[m5[(i + 1)]], 1);
-      for (j=0; j<25; j+=5) {
-        st[j + i] ^= t;
+    for (rnd=0; rnd<18; rnd++) {
+      // Theta
+      for (i=0; i<5; i++) {
+        t  = st[i   ];
+        t ^= st[i+ 5];      
+        t ^= st[i+10];      
+        t ^= st[i+15];      
+        t ^= st[i+20];
+        bc[i] = t;
       }
-    }
-    // Rho Pi
-    t = st[1];
-    for (i=0, r=0; i<24; i++) {
-      r += i + 1;
-      j = keccakf_piln[i];
-      bc[0] = st[j];
-      st[j] = ROTL8(t, r & 7);
-      t = bc[0];
-    }
-    // Chi
-    for (i=0; i<25; i+=5) {
-      memcpy(&bc, &st[i], 5);
-      for (j=0; j<5; j++) {
-        t  = ~bc[m5[(j + 1)]];
-        t &=  bc[m5[(j + 2)]];
-        st[j + i] ^= t; 
+      for (i=0; i<5; i++) {
+        t  = bc[m[(i + 4)]]; 
+        t ^= ROTL8(bc[m[(i + 1)]], 1);
+        for (j=i; j<25; j+=5) {
+          st[j] ^= t;
+        }
       }
+      // Rho + Pi
+      u = st[1];
+      for (i=0, r=0; i<24; i++) {
+        r += i + 1;
+        u  = ROTL8(u, r & 7);
+        XCHG(st[p[i]], u);
+        bc[0] = u;
+      }
+      // Chi
+      for (i=0; i<25; i+=5) {
+        memcpy(&bc, &st[i], 5);
+        for (j=0; j<5; j++) {
+          t  = ~bc[m[(j + 1)]];
+          t &=  bc[m[(j + 2)]];
+          st[j + i] ^= t;
+        }
+      }
+      // Iota
+      st[0] ^= rc[rnd];
     }
-    // Iota
-    st[0] ^= rc[rnd];
-  }
 }
 
 #ifdef TEST
 
 #include <stdio.h>
+
+void bin2hex(uint8_t x[], int len) {
+    int i;
+    for (i=0; i<len; i++) {
+      if ((i & 7)==0) putchar('\n');
+      printf ("0x%02x,", x[i]);
+    }
+    putchar('\n');
+}
+
+// Keccak-f[200, 18] permutation function
+// 210 bytes of x86 assembly
 
 uint8_t tv1[]={
   0x3c,0x28,0x26,0x84,0x1c,0xb3,0x5c,0x17,
@@ -101,33 +112,24 @@ uint8_t tv2[]={
   0xa5,0x99,0x9f,0xdb,0x83,0x4e,0x31,0x66,
   0xa1,0x4b,0xe8,0x27,0xd9,0x50,0x40,0x47,
   0x9e };
-  
-void bin2hex(uint8_t x[], int len) {
-  int i;
-  for (i=0; i<len; i++) {
-    if ((i & 7)==0) putchar('\n');
-    printf ("0x%02x,", x[i]);
-  }
-  putchar('\n');
-}
-  
+ 
 int main(void)
 {
-  uint8_t  out[25];
-  int      equ;
-  
-  memset(out, 0, sizeof(out));
-  
-  k200_permute(out);
-  equ = memcmp(out, tv1, sizeof(tv1))==0;
-  printf("Test 1 %s\n", equ ? "OK" : "Failed"); 
-  //bin2hex(out, 25);
+    uint8_t  out[25];
+    int      equ;
+    
+    memset(out, 0, sizeof(out));
+    
+    k200_permute(out);
+    equ = memcmp(out, tv1, sizeof(tv1))==0;
+    printf("Test 1 %s\n", equ ? "OK" : "Failed"); 
+    //bin2hex(out, 25);
 
-  k200_permute(out);
-  equ = memcmp(out, tv2, sizeof(tv2))==0;
-  printf("Test 2 %s\n", equ ? "OK" : "Failed");
-  //bin2hex(out, 25);
-  
-  return 0;
+    k200_permute(out);
+    equ = memcmp(out, tv2, sizeof(tv2))==0;
+    printf("Test 2 %s\n", equ ? "OK" : "Failed");
+    //bin2hex(out, 25);
+    
+    return 0;
 }
 #endif

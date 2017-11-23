@@ -40,23 +40,23 @@
     (((uint32_t)((p)[0])) | ((uint32_t)((p)[1]) << 8) |                        \
      ((uint32_t)((p)[2]) << 16) | ((uint32_t)((p)[3]) << 24))
 
-void SIPROUND(uint32_t v[4])
-{
-    v[0] += v[1];                                                              
-    v[1] = ROTL(v[1], 5);                                                      
-    v[1] ^= v[0];                                                              
-    v[0] = ROTL(v[0], 16);                                                     
-    v[2] += v[3];                                                              
-    v[3] = ROTL(v[3], 8);                                                      
-    v[3] ^= v[2];                                                              
-    v[0] += v[3];                                                              
-    v[3] = ROTL(v[3], 7);                                                      
-    v[3] ^= v[0];                                                              
-    v[2] += v[1];                                                              
-    v[1] = ROTL(v[1], 13);                                                     
-    v[1] ^= v[2];                                                              
-    v[2] = ROTL(v[2], 16);                                                     
-}
+#define SIPROUND                                                               \
+    do {                                                                       \
+        v0 += v1;                                                              \
+        v1 = ROTL(v1, 5);                                                      \
+        v1 ^= v0;                                                              \
+        v0 = ROTL(v0, 16);                                                     \
+        v2 += v3;                                                              \
+        v3 = ROTL(v3, 8);                                                      \
+        v3 ^= v2;                                                              \
+        v0 += v3;                                                              \
+        v3 = ROTL(v3, 7);                                                      \
+        v3 ^= v0;                                                              \
+        v2 += v1;                                                              \
+        v1 = ROTL(v1, 13);                                                     \
+        v1 ^= v2;                                                              \
+        v2 = ROTL(v2, 16);                                                     \
+    } while (0)
 
 #ifdef DEBUG
 #define TRACE                                                                  \
@@ -73,40 +73,35 @@ void SIPROUND(uint32_t v[4])
 int halfsiphash(const uint8_t *in, const size_t inlen, const uint8_t *k,
                 uint8_t *out, const size_t outlen) {
 
-    uint32_t v[4];
-    int i;
-    uint32_t m;
-    
+    assert((outlen == 4) || (outlen == 8));
+    uint32_t v0 = 0;
+    uint32_t v1 = 0;
+    uint32_t v2 = 0x6c796765;
+    uint32_t v3 = 0x74656462;
     uint32_t k0 = U8TO32_LE(k);
     uint32_t k1 = U8TO32_LE(k + 4);
-        
+    uint32_t m;
+    int i;
     const uint8_t *end = in + inlen - (inlen % sizeof(uint32_t));
     const int left = inlen & 3;
     uint32_t b = ((uint32_t)inlen) << 24;
-    
-    v[0] = 0;
-    v[1] = 0;
-    v[2] = 0x6c796765;
-    v[3] = 0x74656462;
-    
-    v[3] ^= k1;
-    v[2] ^= k0;
-    v[1] ^= k1;
-    v[0] ^= k0;
+    v3 ^= k1;
+    v2 ^= k0;
+    v1 ^= k1;
+    v0 ^= k0;
 
     if (outlen == 8)
-        v[1] ^= 0xee;
+        v1 ^= 0xee;
 
     for (; in != end; in += 4) {
         m = U8TO32_LE(in);
-        v[3] ^= m;
+        v3 ^= m;
 
-        printf ("\nv1: %08X", m);
         TRACE;
         for (i = 0; i < cROUNDS; ++i)
-            SIPROUND(v);
+            SIPROUND;
 
-        v[0] ^= m;
+        v0 ^= m;
     }
 
     switch (left) {
@@ -121,37 +116,36 @@ int halfsiphash(const uint8_t *in, const size_t inlen, const uint8_t *k,
         break;
     }
 
-    printf ("\nv1: %08X", b);
-    v[3] ^= b;
+    v3 ^= b;
 
     TRACE;
     for (i = 0; i < cROUNDS; ++i)
-        SIPROUND(v);
+        SIPROUND;
 
-    v[0] ^= b;
+    v0 ^= b;
 
     if (outlen == 8)
-        v[2] ^= 0xee;
+        v2 ^= 0xee;
     else
-        v[2] ^= 0xff;
+        v2 ^= 0xff;
 
     TRACE;
     for (i = 0; i < dROUNDS; ++i)
-        SIPROUND(v);
+        SIPROUND;
 
-    b = v[1] ^ v[3];
+    b = v1 ^ v3;
     U32TO8_LE(out, b);
 
     if (outlen == 4)
         return 0;
 
-    v[1] ^= 0xdd;
+    v1 ^= 0xdd;
 
     TRACE;
     for (i = 0; i < dROUNDS; ++i)
-        SIPROUND(v);
+        SIPROUND;
 
-    b = v[1] ^ v[3];
+    b = v1 ^ v3;
     U32TO8_LE(out + 4, b);
 
     return 0;

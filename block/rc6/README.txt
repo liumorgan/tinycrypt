@@ -1,5 +1,4 @@
 
-RC5 block cipher
 
 Designers         Ron Rivest, Matt Robshaw, Ray Sidney, Yiqun Lisa Yin
 First published   1998

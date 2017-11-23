@@ -47,10 +47,10 @@ extern "C" {
 
   void threefish_setkey (threefish_ctx_t*, const void*, const void*);
   void threefish_setkeyx (threefish_ctx_t*, const void*, const void*);
-  
   void threefish_encrypt (const threefish_ctx_t*, void*, uint32_t);
-  void threefish_encryptx (const threefish_ctx_t*, void*, uint32_t);
 
+  void threefish(void *key, void *tweak, void *data);
+  
 #ifdef __cplusplus
 }
 #endif

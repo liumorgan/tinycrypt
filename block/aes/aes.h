@@ -30,7 +30,7 @@
 #ifndef AES_H
 #define AES_H
 
-#include "macros.h"
+#include "../../macros.h"
 
 #define Nk 8      // key length in words
 #define Nr 14     // number of rounds for 256-bit

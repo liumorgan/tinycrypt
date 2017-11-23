@@ -95,7 +95,7 @@ void permute(void *data)
 // enc should be 0 for addition or 1 for subtraction
 void addkey(
     const threefish_ctx_t *c, 
-    void *data, uint32_t s, 
+    void *data, uint8_t s, 
     uint64_t enc)
 {
   int i;
@@ -121,7 +121,7 @@ void threefish_encrypt(
     void *data, 
     uint32_t enc)
 {
-  uint32_t i, s=0, ofs=1;
+  uint8_t i, s=0, ofs=1;
   uint32_t x0, x1;
   
   uint8_t rc[16] = 
@@ -130,7 +130,7 @@ void threefish_encrypt(
 
   if (enc == THREEFISH_DECRYPT) {
     s   = 18;
-    ofs = ~0L;
+    ofs = ~0;
     
     // swap rotation constants if
     // decrypting

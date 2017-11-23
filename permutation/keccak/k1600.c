@@ -33,72 +33,74 @@
 // Primitive polynomial over GF(2): x^8+x^6+x^5+x^4+1
 uint64_t rc (uint8_t *LFSR)
 {
-  uint64_t c;
-  uint32_t i, t;
+    uint64_t c;
+    uint32_t i, t;
 
-  c = 0;
-  t = *LFSR;
-  
-  for (i=1; i<128; i += i) 
-  {
-    if (t & 1) {
-      c ^= (uint64_t)1ULL << (i - 1);
+    c = 0;
+    t = *LFSR;
+    
+    for (i=1; i<128; i += i) 
+    {
+      if (t & 1) {
+        c ^= (uint64_t)1ULL << (i - 1);
+      }
+      t = (t & 0x80) ? (t << 1) ^ 0x71 : t << 1;
     }
-    t = (t & 0x80) ? (t << 1) ^ 0x71 : t << 1;
-  }
-  *LFSR = (uint8_t)t;
-  return c;
+    *LFSR = (uint8_t)t;
+    return c;
 }
 
 void k1600_permute (void *state)
 {
-  uint32_t i, j, rnd, r;
-  uint64_t t, bc[5];
-  uint8_t  lfsr=1;
-  uint64_t *st=(uint64_t*)state;
+    uint32_t i, j, rnd;
+    uint64_t t, u, bc[5];
+    uint8_t  r, lfsr=1;
+    uint64_t *st=(uint64_t*)state;
   
-const uint8_t keccakf_piln[24] = 
-{ 10, 7,  11, 17, 18, 3, 5,  16, 8,  21, 24, 4, 
-  15, 23, 19, 13, 12, 2, 20, 14, 22, 9,  6,  1  };
+    uint8_t p[24] = 
+    { 10, 7,  11, 17, 18, 3, 5,  16, 8,  21, 24, 4, 
+      15, 23, 19, 13, 12, 2, 20, 14, 22, 9,  6,  1  };
+      
+    uint8_t m[9] = 
+    { 0, 1, 2, 3, 4, 0, 1, 2, 3};
   
-const uint8_t m5[10] = 
-{ 0, 1, 2, 3, 4, 0, 1, 2, 3, 4 };
-  
-  for (rnd=0; rnd<24; rnd++) 
-  {
-    // Theta
-    for (i=0; i<5; i++) {     
-      bc[i] = st[i] 
-            ^ st[i +  5] 
-            ^ st[i + 10] 
-            ^ st[i + 15] 
-            ^ st[i + 20];
-    }
-    for (i=0; i<5; i++) {
-      t = bc[m5[(i + 4)]] ^ ROTL64(bc[m5[(i + 1)]], 1);
-      for (j=0; j<25; j+=5) {
-        st[j + i] ^= t;
-      }
-    }
-    // Rho Pi
-    t = st[1];
-    for (i=0, r=0; i<24; i++) {
-      r += i + 1;
-      j = keccakf_piln[i];
-      bc[0] = st[j];
-      st[j] = ROTL64(t, r & 63);
-      t = bc[0];
-    }
-    // Chi
-    for (j=0; j<25; j+=5) {
-      memcpy(&bc, &st[j], 40);
+    for (rnd=0; rnd<24; rnd++) {
+      // Theta
       for (i=0; i<5; i++) {
-        st[j + i] ^= (~bc[m5[(i + 1)]]) & bc[m5[(i + 2)]];
+        t  = st[i   ];
+        t ^= st[i+ 5];      
+        t ^= st[i+10];      
+        t ^= st[i+15];      
+        t ^= st[i+20];
+        bc[i] = t;
       }
+      for (i=0; i<5; i++) {
+        t  = bc[m[(i + 4)]]; 
+        t ^= ROTL64(bc[m[(i + 1)]], 1);
+        for (j=i; j<25; j+=5) {
+          st[j] ^= t;
+        }
+      }
+      // Rho + Pi
+      u = st[1];
+      for (i=0, r=0; i<24; i++) {
+        r += i + 1;
+        u  = ROTL64(u, r & 63);
+        XCHG(st[p[i]], u);
+        bc[0] = u;
+      }
+      // Chi
+      for (i=0; i<25; i+=5) {
+        memcpy(&bc, &st[i], 5*8);
+        for (j=0; j<5; j++) {
+          t  = ~bc[m[(j + 1)]];
+          t &=  bc[m[(j + 2)]];
+          st[j + i] ^= t;
+        }
+      }
+      // Iota
+      st[0] ^= rc(&lfsr);
     }
-    // Iota
-    st[0] ^= rc(&lfsr);
-  }
 }
 
 #ifdef TEST
@@ -160,31 +162,31 @@ uint8_t tv2[]={
   0x5c,0xbf,0x8f,0x6a,0xd2,0x6c,0xd0,0x20 };
   
 void bin2hex(uint8_t x[], int len) {
-  int i;
-  for (i=0; i<len; i++) {
-    if ((i & 7)==0) putchar('\n');
-    printf ("0x%02x,", x[i]);
-  }
-  putchar('\n');
+    int i;
+    for (i=0; i<len; i++) {
+      if ((i & 7)==0) putchar('\n');
+      printf ("0x%02x,", x[i]);
+    }
+    putchar('\n');
 }
   
 int main(void)
 {
-  uint8_t  out[200];
-  int      equ;
-  
-  memset(out, 0, sizeof(out));
-  
-  k1600_permute(out);
-  equ = memcmp(out, tv1, sizeof(tv1))==0;
-  printf("Test 1 %s\n", equ ? "OK" : "Failed"); 
-  //bin2hex(out, 200);
+    uint8_t  out[200];
+    int      equ;
+    
+    memset(out, 0, sizeof(out));
+    
+    k1600_permute(out);
+    equ = memcmp(out, tv1, sizeof(tv1))==0;
+    printf("Test 1 %s\n", equ ? "OK" : "Failed"); 
+    //bin2hex(out, 200);
 
-  k1600_permute(out);
-  equ = memcmp(out, tv2, sizeof(tv2))==0;
-  printf("Test 2 %s\n", equ ? "OK" : "Failed");
-  //bin2hex(out, 200);
+    k1600_permute(out);
+    equ = memcmp(out, tv2, sizeof(tv2))==0;
+    printf("Test 2 %s\n", equ ? "OK" : "Failed");
+    //bin2hex(out, 200);
 
-  return 0;
+    return 0;
 }
 #endif

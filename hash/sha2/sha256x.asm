@@ -1,5 +1,5 @@
 ;
-;  Copyright © 2015 Odzhan. All Rights Reserved.
+;  Copyright © 2015, 2017 Odzhan, Peter Ferrie. All Rights Reserved.
 ;
 ;  Redistribution and use in source and binary forms, with or without
 ;  modification, are permitted provided that the following conditions are
@@ -30,7 +30,7 @@
 ; -----------------------------------------------
 ; SHA-256 stream cipher in x86 assembly
 ;
-; size: 675 bytes, 653 using dynamic constants
+; size: 662 bytes, 629 using dynamic constants
 ;
 ; global calls use cdecl convention
 ;
@@ -59,7 +59,7 @@ endstruc
   global _SHA256_Finalx
 %endif
 
-;%define DYNAMIC
+%define DYNAMIC
 
 ; Initialize hash values:
 ; (first 32 bits of the fractional parts of the square 
@@ -77,6 +77,8 @@ _SHA256_Initx:
     stosd
     
 %ifdef DYNAMIC
+%define i  ecx
+
     xor    i, i
 load_state:
     call   sqrt2int
@@ -110,6 +112,7 @@ load_state:
     mov    eax, 05be0cd19h
     stosd
 %endif
+ex_upd:
     popad
     ret
     
@@ -154,9 +157,6 @@ upd_l1:
     call   _SHA256_Transformx
     cdq
     jmp    upd_l1
-ex_upd:
-    popad
-    ret
 
 ; finalize context
 SHA256_Finalx:
@@ -189,8 +189,8 @@ calc_len:
     ; ctx->buf.v64[7] = SWAP64(ctx->len * 8);
     mov    eax, [ebx+len+0]
     mov    edx, [ebx+len+4]
-    shld   edx, eax, 3
-    shl    eax, 3
+    mov    cl, SHA256_LBLOCK
+    mul    ecx
     bswap  eax
     bswap  edx
     mov    dword[ebx+buffer+7*8+0], edx
@@ -202,7 +202,6 @@ calc_len:
     ; }
     ;
     ; memcpy (dgst, ctx->s.v8, SHA256_DIGEST_LENGTH);
-    mov    cl, SHA256_LBLOCK
     lea    esi, [ebx+state]
     mov    edi, [esp+32+4] ; dgst
 swap_words:
@@ -235,9 +234,8 @@ _SHA256_Transformx:
     lea    esi, [ebx+state]
     push   esi
     
-    push   64
-    pop    ecx
-    shl    ecx, 3
+    xor    ecx, ecx
+    mov    ch, 2
     
     ; allocate work space
     sub    esp, ecx
@@ -323,8 +321,12 @@ ld_k:
     add    t1, dword [edi+4*i+32]
     ; S0 := EP0(a)
     ; S0 := (a rightrotate 2) xor (a rightrotate 13) xor (a rightrotate 22)
-    mov    s0, _a
+    pop    eax
+    push   i
+    push   eax
+    scasd
     mov    t2, s0
+    mov    t3, s0
     ror    s0, 22
     ror    t2, 2
     xor    s0, t2
@@ -332,32 +334,28 @@ ld_k:
     xor    s0, t2
     ; MAJ(a, b, c)
     ; maj := (a and b) xor (a and c) xor (b and c)
-    mov    t2, _a
-    mov    t3, _a
-    or     t2, _b
-    and    t2, _c
-    and    t3, _b
+    mov    t2, t3
+    or     t2, _a
+    and    t2, _b
+    and    t3, _a
     or     t2, t3
     ; temp2 := S0 + maj
     add    t2, s0
     ; d = d + temp1
-    add    _d, t1
+    add    _c, t1
     ; h = temp1 + temp2
-    mov    _h, t1
-    add    _h, t2
+    add    t2, t1
+    mov    _g, t2
     ; shift state
-    mov    esi, edi  
-    push   i
-    push   edi
+    pop    eax
+    mov    edi, esp
     mov    cl, 7
-    lodsd                   ; load a
 shift_state:
     scasd                   ; skip a
     xchg   eax, [edi]       ; a becomes b, eax then has b to swap with c and so on
     loop   shift_state
-    pop    edi
-    stosd
     pop    i
+    push   eax
     
     ; i++
     inc    i
@@ -393,8 +391,7 @@ cbr_primes:
     push   1
     push   0
     fild   qword[esp]   ; load 2^32
-    push   1
-    fild   dword[esp]
+    fld1
     push   3
     fild   dword[esp]
     fdivp                   ; 1.0/3.0
@@ -412,7 +409,7 @@ cbr_primes:
     fmulp  st1, st0                 ; * 2^32
     fistp  qword[esp]   ; save integer
     pop    eax
-    add    esp, 4*4         ; release stack
+    add    esp, 3*4         ; release stack
     mov    [esp+1ch], eax
     popad
     ret
@@ -422,8 +419,8 @@ init_fpu:
     push   eax
     fstcw  [esp]            ; store control word
     pop    eax
-    or     ax, 00400H       ; set round down bit
-    and    ax, 0F7FFH       ; clear bit
+    or     ah, 4            ; set round down bit
+    and    ah, 0f7h         ; clear bit
     push   eax
     fldcw  [esp]            ; load control word
     pop    eax
@@ -432,9 +429,19 @@ init_fpu:
 sqrt2int:
     pushad
     call   sqr_primes
+
+primes dw 2, 3, 5, 7, 11, 13, 17, 19, 
+       dw 23, 29, 31, 37, 41, 43, 47, 53
+       dw 59, 61, 67, 71, 73, 79, 83, 89
+       dw 97, 101, 103, 107, 109, 113, 127, 131
+       dw 137, 139, 149, 151, 157, 163, 167, 173 
+       dw 179, 181, 191, 193, 197, 199, 211, 223 
+       dw 227, 229, 233, 239, 241, 251, 257, 263
+       dw 269, 271, 277, 281, 283, 293, 307, 311
+primes_len equ $-primes
+    
 sqr_primes:
     pop    esi
-    lea    esi, [esi+(primes-sqr_primes)]
     ; get square root of number in eax 
     ; return 32-bit fractional part as integer
     push   1
@@ -456,16 +463,6 @@ sqr_primes:
     popad
     ret
 
-primes dw 2, 3, 5, 7, 11, 13, 17, 19, 
-       dw 23, 29, 31, 37, 41, 43, 47, 53
-       dw 59, 61, 67, 71, 73, 79, 83, 89
-       dw 97, 101, 103, 107, 109, 113, 127, 131
-       dw 137, 139, 149, 151, 157, 163, 167, 173 
-       dw 179, 181, 191, 193, 197, 199, 211, 223 
-       dw 227, 229, 233, 239, 241, 251, 257, 263
-       dw 269, 271, 277, 281, 283, 293, 307, 311
-primes_len equ $-primes
-    
 %else
 
 _k dd 0428a2f98h, 071374491h, 0b5c0fbcfh, 0e9b5dba5h

@@ -671,22 +671,24 @@ uint64_t rho (uint64_t n)
 // return nth root of a 64-bit number
 // max number for cube root is 18446724184312856125
 // this is based on some code for matasano challenges
-uint64_t nroot (uint64_t i_num, uint64_t i_n) {
-  uint64_t N, R, x, t0, t1, t2, p;
+uint32_t nroot (uint32_t i_num, uint32_t i_n) {
+  uint32_t N, R, x, t0, t1, t2, p;
   
   t0 = i_num;
   x  = i_num;
-  N  = subtract (i_n, 1);
+  N  = i_n - 1;
   
   while (t0 > 0) {
     p  = x;
-    t0 = multiply(N, p);
-    t1 = power(p, N);
-    divide(&t2, &R, i_num, t1);
-    t1 = add(t0, t2);
-    divide(&x, &R, t1, i_n);
-    t0 = subtract(p, x);
+    t0 = N * p;
+    t1 = exp(p, N);
+    t2 = i_num / t1;
+    t1 = t0 + t2;
+    x  = t1 / i_n;
+    t0 = p - x;
   }
   return x;
 }
+  
+
   

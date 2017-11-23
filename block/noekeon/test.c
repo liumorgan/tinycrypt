@@ -1,8 +1,7 @@
 
-// test unit
-// odzhan
-
 #include <stdio.h>
+#include <stdint.h>
+#include <string.h>
 
 #include "noekeon.h"
 
@@ -61,16 +60,14 @@ int main(void)
   hex2bin (pt2, tv_pt);
   hex2bin (&ctx, tv_key);
     
-  print_bytes("KEY", ctx, 16);
-  
-  Noekeon(&ctx, pt1, NOEKEON_ENCRYPT);
+  Noekeonx(&ctx, pt1, NOEKEON_ENCRYPT);
   equ = memcmp (pt1, ct, 16)==0;
 
   printf ("\nEncryption : %s : ",
       equ ? "OK" : "FAILED"); 
   print_bytes("CT", pt1, 16);
   
-  Noekeon(&ctx, pt1, NOEKEON_DECRYPT);
+  Noekeonx(&ctx, pt1, NOEKEON_DECRYPT);
   equ = memcmp (pt1, pt2, 16)==0;
   
   printf ("\nDecryption : %s : ",

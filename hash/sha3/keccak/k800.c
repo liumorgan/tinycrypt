@@ -56,30 +56,26 @@ uint32_t rc (uint8_t *LFSR) {
 }
 
 void k800_permute (void *state) {
-    uint32_t i, j, r, t, u, bc[5];
-    uint8_t  lfsr=1;
+    uint32_t i, j, rnd;
+    uint32_t t, u, bc[5];
+    uint8_t  r, lfsr=1;
     uint32_t *st=(uint32_t*)state;
-    uint8_t  *p, *m;
-    int      rnd;
-    
-    uint32_t piln[6]=
-    { 0x110b070a, 0x10050312, 0x04181508, 
-      0x0d13170f, 0x0e14020c, 0x01060916 };
-
-    uint32_t m5[3]=
-    { 0x03020100, 0x02010004, 0x00000403 };
-    
-    p = (uint8_t*)piln;
-    m = (uint8_t*)m5;
-    
+  
+    uint8_t p[24] = 
+    { 10, 7,  11, 17, 18, 3, 5,  16, 8,  21, 24, 4, 
+      15, 23, 19, 13, 12, 2, 20, 14, 22, 9,  6,  1  };
+      
+    uint8_t m[9] = 
+    { 0, 1, 2, 3, 4, 0, 1, 2, 3};
+  
     for (rnd=0; rnd<22; rnd++) {
       // Theta
-      for (i=0; i<5; i++) {     
-        t  = st[i]; 
-        t ^= st[i +  5]; 
-        t ^= st[i + 10]; 
-        t ^= st[i + 15]; 
-        t ^= st[i + 20];
+      for (i=0; i<5; i++) {
+        t  = st[i   ];
+        t ^= st[i+ 5];      
+        t ^= st[i+10];      
+        t ^= st[i+15];      
+        t ^= st[i+20];
         bc[i] = t;
       }
       for (i=0; i<5; i++) {
@@ -90,19 +86,19 @@ void k800_permute (void *state) {
         }
       }
       // Rho + Pi
-      u = st[1];      
+      u = st[1];
       for (i=0, r=0; i<24; i++) {
-        r = r + i + 1;    
-        u  = ROTL32(u, r);
+        r += i + 1;
+        u  = ROTL32(u, r & 31);
         XCHG(st[p[i]], u);
         bc[0] = u;
       }
       // Chi
       for (i=0; i<25; i+=5) {
-        memcpy(&bc, &st[i], 5*4);      
+        memcpy(&bc, &st[i], 5*4);
         for (j=0; j<5; j++) {
           t  = ~bc[m[(j + 1)]];
-          t &=  bc[m[(j + 2)]];        
+          t &=  bc[m[(j + 2)]];
           st[j + i] ^= t;
         }
       }
@@ -146,31 +142,31 @@ uint8_t tv2[]={
   0xab,0x3b,0x78,0xb3 };
   
 void bin2hex(uint8_t x[], int len) {
-  int i;
-  for (i=0; i<len; i++) {
-    if ((i & 7)==0) putchar('\n');
-    printf ("0x%02x,", x[i]);
-  }
-  putchar('\n');
+    int i;
+    for (i=0; i<len; i++) {
+      if ((i & 7)==0) putchar('\n');
+      printf ("0x%02x,", x[i]);
+    }
+    putchar('\n');
 }
   
 int main(void)
 {
-  uint8_t  out[100];
-  int      equ;
-  
-  memset(out, 0, sizeof(out));
-  
-  k800_permute(out);
-  equ = memcmp(out, tv1, sizeof(tv1))==0;
-  printf("Test 1 %s\n", equ ? "OK" : "Failed"); 
-  //bin2hex(out, 100);
+    uint8_t  out[100];
+    int      equ;
+    
+    memset(out, 0, sizeof(out));
+    
+    k800_permute(out);
+    equ = memcmp(out, tv1, sizeof(tv1))==0;
+    printf("Test 1 %s\n", equ ? "OK" : "Failed"); 
+    //bin2hex(out, 100);
 
-  k800_permute(out);
-  equ = memcmp(out, tv2, sizeof(tv2))==0;
-  printf("Test 2 %s\n", equ ? "OK" : "Failed");
-  //bin2hex(out, 100);
+    k800_permute(out);
+    equ = memcmp(out, tv2, sizeof(tv2))==0;
+    printf("Test 2 %s\n", equ ? "OK" : "Failed");
+    //bin2hex(out, 100);
 
-  return 0;
+    return 0;
 }
 #endif
