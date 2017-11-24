@@ -29,6 +29,8 @@
 
 #include "keccak.h"
 
+void k1600_permutex(void *state);
+
 // round constant function
 // Primitive polynomial over GF(2): x^8+x^6+x^5+x^4+1
 uint64_t rc (uint8_t *LFSR)
@@ -177,12 +179,12 @@ int main(void)
     
     memset(out, 0, sizeof(out));
     
-    k1600_permute(out);
+    k1600_permutex(out);
     equ = memcmp(out, tv1, sizeof(tv1))==0;
     printf("Test 1 %s\n", equ ? "OK" : "Failed"); 
     //bin2hex(out, 200);
 
-    k1600_permute(out);
+    k1600_permutex(out);
     equ = memcmp(out, tv2, sizeof(tv2))==0;
     printf("Test 2 %s\n", equ ? "OK" : "Failed");
     //bin2hex(out, 200);

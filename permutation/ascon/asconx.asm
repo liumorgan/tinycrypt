@@ -30,7 +30,7 @@
 ; -----------------------------------------------
 ; Ascon Permutation function in x86-64 assembly
 ;
-; size: 210 bytes
+; size: 254 bytes
 ;
 ; global calls use Microsoft x64 fastcall convention
 ;
@@ -128,43 +128,38 @@ permute_loop:
     ; **********************
     ; x0 ^= ROTR(x0, 19) ^ ROTR(x0, 28);
     mov    t0, x0
-    mov    t1, x0
     ror    t0, 19
-    ror    t1, 28
     xor    x0, t0
-    xor    x0, t1
+    ror    t0, 28-19
+    xor    x0, t0
     
     ; x1 ^= ROTR(x1, 61) ^ ROTR(x1, 39);
     mov    t0, x1
-    mov    t1, x1
-    ror    t0, 61
-    ror    t1, 39
+    ror    t0, 39
     xor    x1, t0
-    xor    x1, t1
+    ror    t0, 61-39
+    xor    x1, t0
 
     ; x2 ^= ROTR(x2,  1) ^ ROTR(x2,  6);
     mov    t0, x2
-    mov    t1, x2
     ror    t0, 1
-    ror    t1, 6
     xor    x2, t0
-    xor    x2, t1
+    ror    t0, 6-1
+    xor    x2, t0
     
     ; x3 ^= ROTR(x3, 10) ^ ROTR(x3, 17);
     mov    t0, x3
-    mov    t1, x3
     ror    t0, 10
-    ror    t1, 17
     xor    x3, t0
-    xor    x3, t1
+    ror    t0, 17-10
+    xor    x3, t0
     
     ; x4 ^= ROTR(x4,  7) ^ ROTR(x4, 41);
     mov    t0, x4
-    mov    t1, x4
     ror    t0, 7
-    ror    t1, 41
     xor    x4, t0
-    xor    x4, t1
+    ror    t0, 41-7
+    xor    x4, t0
     
     pop    i
     inc    i
