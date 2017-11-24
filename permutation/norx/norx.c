@@ -77,3 +77,25 @@ void norx_permute(void *state)
       }
     }
 }
+
+
+#ifdef TEST
+
+#include <stdio.h>
+
+int main(void) {
+  norx_word_t state[16];
+  int         i;
+  
+  memset(state, 0, sizeof(state));
+  for (i=0; i<16; i++) state[i] = i;
+  
+  norx_permute(state);
+  
+  for (i=0; i<16; i++) {
+    printf ("%x ", state[i]);
+  }
+  return 0;
+}  
+#endif
+ 

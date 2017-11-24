@@ -29,7 +29,7 @@ state$ = 24
 rnds$ = 32
 ascon_permute PROC					; COMDAT
 
-; 7    : void ascon_permute(void *state, int rnds) {
+; 9    : void ascon_permute(void *state, int rnds) {
 
 $LN11:
 	mov	rax, rsp
@@ -40,19 +40,21 @@ $LN11:
 	push	r14
 	push	r15
 
-; 8    :   int i;
-; 9    :   uint64_t x0, x1, x2, x3, x4;
-; 10   :   uint64_t t0, t1, t2, t3, t4;
-; 11   :   uint64_t *x=(uint64_t*)state;
-; 12   :   
-; 13   :   x0 = x[0]; x1 = x[1];
+; 10   :     int      i;
+; 11   :     uint64_t x0, x1, x2, x3, x4;
+; 12   :     uint64_t t0, t1, t2, t3, t4;
+; 13   :     
+; 14   :     uint64_t *x=(uint64_t*)state;
+; 15   :     
+; 16   :     // load 320-bit state
+; 17   :     x0 = x[0]; x1 = x[1];
 
 	mov	rbx, QWORD PTR [rcx]
 
-; 14   :   x2 = x[2]; x3 = x[3];
-; 15   :   x4 = x[4];
-; 16   : 
-; 17   :   for (i=0; i<rnds; i++) {
+; 18   :     x2 = x[2]; x3 = x[3];
+; 19   :     x4 = x[4];
+; 20   : 
+; 21   :     for (i=0; i<rnds; i++) {
 
 	xor	r10d, r10d
 	mov	rsi, QWORD PTR [rcx+8]
@@ -63,22 +65,24 @@ $LN11:
 	test	edx, edx
 	jle	$LN3@ascon_perm
 
-; 8    :   int i;
-; 9    :   uint64_t x0, x1, x2, x3, x4;
-; 10   :   uint64_t t0, t1, t2, t3, t4;
-; 11   :   uint64_t *x=(uint64_t*)state;
-; 12   :   
-; 13   :   x0 = x[0]; x1 = x[1];
+; 10   :     int      i;
+; 11   :     uint64_t x0, x1, x2, x3, x4;
+; 12   :     uint64_t t0, t1, t2, t3, t4;
+; 13   :     
+; 14   :     uint64_t *x=(uint64_t*)state;
+; 15   :     
+; 16   :     // load 320-bit state
+; 17   :     x0 = x[0]; x1 = x[1];
 
 	mov	r14d, r10d
 	mov	r15d, edx
 $LL4@ascon_perm:
 
-; 18   :     // addition of round constant
-; 19   :     x2 ^= ((0xfull - i) << 4) | i;
-; 20   : 
-; 21   :     // substitution layer
-; 22   :     x0 ^= x4;    x4 ^= x3;    x2 ^= x1;
+; 22   :       // addition of round constant
+; 23   :       x2 ^= ((0xfull - i) << 4) | i;
+; 24   : 
+; 25   :       // substitution layer
+; 26   :       x0 ^= x4;    x4 ^= x3;    x2 ^= x1;
 
 	xor	rbx, rdi
 	mov	eax, 240				; 000000f0H
@@ -86,8 +90,8 @@ $LL4@ascon_perm:
 	xor	rdi, rbp
 	or	rax, r10
 
-; 23   :     t0  = x0;    t1  = x1;    t2  = x2;    t3  = x3;    t4  = x4;
-; 24   :     t0 =~ t0;    t1 =~ t1;    t2 =~ t2;    t3 =~ t3;    t4 =~ t4;
+; 27   :       t0  = x0;    t1  = x1;    t2  = x2;    t3  =  x3;    t4  = x4;
+; 28   :       t0  = ~t0;   t1  = ~t1;   t2  = ~t2;   t3  = ~t3;    t4  = ~t4;
 
 	mov	r8, rbx
 	xor	r11, rax
@@ -97,7 +101,7 @@ $LL4@ascon_perm:
 	not	rax
 	mov	rcx, r11
 
-; 25   :     t0 &= x1;    t1 &= x2;    t2 &= x3;    t3 &= x4;    t4 &= x0;
+; 29   :       t0 &= x1;    t1 &= x2;    t2 &= x3;    t3 &=  x4;    t4 &= x0;
 
 	and	rax, r11
 	not	rcx
@@ -106,12 +110,12 @@ $LL4@ascon_perm:
 	and	rdx, rbx
 	not	r8
 
-; 26   :     x0 ^= t1;    x1 ^= t2;    x2 ^= t3;    x3 ^= t4;    x4 ^= t0;
+; 30   :       x0 ^= t1;    x1 ^= t2;    x2 ^= t3;    x3 ^=  t4;    x4 ^= t0;
 
 	xor	rbx, rax
 	and	r8, rsi
 
-; 27   :     x1 ^= x0;    x0 ^= x4;    x3 ^= x2;    x2 =~ x2;
+; 31   :       x1 ^= x0;    x0 ^= x4;    x3 ^= x2;    x2  = ~x2;
 
 	xor	rsi, rcx
 	mov	rax, rbp
@@ -125,9 +129,9 @@ $LL4@ascon_perm:
 	xor	rbx, rdi
 	not	r11
 
-; 28   : 
-; 29   :     // linear diffusion layer
-; 30   :     x0 ^= ROTR(x0, 19) ^ ROTR(x0, 28);
+; 32   : 
+; 33   :       // linear diffusion layer
+; 34   :       x0 ^= ROTR(x0, 19) ^ ROTR(x0, 28);
 
 	mov	rcx, rbx
 	ror	rcx, 28
@@ -138,7 +142,7 @@ $LL4@ascon_perm:
 	add	r14, 16
 	xor	rbx, rcx
 
-; 31   :     x1 ^= ROTR(x1, 61) ^ ROTR(x1, 39);
+; 35   :       x1 ^= ROTR(x1, 61) ^ ROTR(x1, 39);
 
 	mov	rax, rsi
 	rol	rax, 3
@@ -146,7 +150,7 @@ $LL4@ascon_perm:
 	rol	rcx, 25
 	xor	rcx, rax
 
-; 32   :     x2 ^= ROTR(x2,  1) ^ ROTR(x2,  6);
+; 36   :       x2 ^= ROTR(x2,  1) ^ ROTR(x2,  6);
 
 	mov	rax, r11
 	xor	rsi, rcx
@@ -155,7 +159,7 @@ $LL4@ascon_perm:
 	ror	rcx, 6
 	xor	rcx, rax
 
-; 33   :     x3 ^= ROTR(x3, 10) ^ ROTR(x3, 17);
+; 37   :       x3 ^= ROTR(x3, 10) ^ ROTR(x3, 17);
 
 	mov	rax, rbp
 	xor	r11, rcx
@@ -164,7 +168,7 @@ $LL4@ascon_perm:
 	ror	rcx, 17
 	xor	rcx, rax
 
-; 34   :     x4 ^= ROTR(x4,  7) ^ ROTR(x4, 41);
+; 38   :       x4 ^= ROTR(x4,  7) ^ ROTR(x4, 41);
 
 	mov	rax, rdi
 	xor	rbp, rcx
@@ -177,15 +181,16 @@ $LL4@ascon_perm:
 	jne	$LL4@ascon_perm
 $LN3@ascon_perm:
 
-; 35   : 
-; 36   :   }
-; 37   :   x[0] = x0; x[1] = x1;
+; 39   : 
+; 40   :     }
+; 41   :     // save 320-bit state
+; 42   :     x[0] = x0; x[1] = x1;
 
 	mov	QWORD PTR [r9], rbx
 
-; 38   :   x[2] = x2; x[3] = x3;
-; 39   :   x[4] = x4;
-; 40   : }
+; 43   :     x[2] = x2; x[3] = x3;
+; 44   :     x[4] = x4;
+; 45   : }
 
 	mov	rbx, QWORD PTR [rsp+24]
 	mov	QWORD PTR [r9+8], rsi
