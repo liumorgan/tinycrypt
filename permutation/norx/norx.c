@@ -6,7 +6,7 @@
  
 #include "../../macros.h"
  
-#define NORX_W 8           /* Word size: 8, 16, 32 or 64 */
+#define NORX_W 32           /* Word size: 8, 16, 32 or 64 */
 #define NORX_L 4           /* Round number: 4 or 6 */
 
 #if NORX_W == 8
@@ -47,7 +47,9 @@ typedef union _norx_state_t {
 // same as addition without using modular ADD
 #define H(A, B) ( ( (A) ^ (B) ) ^ ( ( (A) & (B) ) << 1) )
 
-void norx_permute(void *state)
+void norx_permutex(void *state, int rnds);
+
+void norx_permute(void *state, int rnds)
 {
     int      i, j, idx;
     uint32_t a, b, c, d;
@@ -57,7 +59,7 @@ void norx_permute(void *state)
     { 0xC840, 0xD951, 0xEA62, 0xFB73,    // column index
       0xFA50, 0xCB61, 0xD872, 0xE943 };  // diagnonal index
     
-    for (i=0; i<NORX_L; i++) {
+    for (i=0; i<rnds; i++) {
       for (j=0; j<8; j++) {
         idx = idx16[j];
         
@@ -88,19 +90,32 @@ void norx_permute(void *state)
 #include <stdio.h>
 
 int main(void) {
-  norx_word_t state[16];
-  int         i;
-  uint8_t     x;
+  norx_word_t state1[16], state2[16];
+  int         i, equ;
+
+  memset(state1, 0, sizeof(state1));
+  memset(state2, 0, sizeof(state2));
   
-  printf ("%llx\n", BITS(x));
+  for (i=0; i<16; i++) state1[i] = i;
+  for (i=0; i<16; i++) state2[i] = i;
   
-  memset(state, 0, sizeof(state));
-  for (i=0; i<16; i++) state[i] = i;
+  norx_permute(state1, 8);
+  norx_permutex(state2, 8);
   
-  norx_permute(state);
+  equ = (memcmp(state1, state2, sizeof(state1))==0);
   
-  for (i=0; i<16; i++) {
-    printf ("%x ", state[i]);
+  printf ("Test %s\n", equ ? "OK" : "FAILED");
+  
+  printf ("\n[*] state 1\n");
+  for (i=0; i<sizeof(state1); i++) {
+    if ((i & 7)==0) putchar('\n');
+    printf ("%02x ", ((uint8_t*)&state1)[i]);
+  }
+
+  printf("\n\n[*] state 2\n");  
+  for (i=0; i<sizeof(state2); i++) {
+    if ((i & 7)==0) putchar('\n');
+    printf ("%02x ", ((uint8_t*)&state2)[i]);
   }
   return 0;
 }  

@@ -30,7 +30,7 @@
 ; -----------------------------------------------
 ; NORX permutation function in x86 assembly
 ;
-; size: 109 bytes
+; size: 117 bytes
 ;
 ; global calls use cdecl convention
 ;
@@ -38,6 +38,11 @@
 
    bits 32
 
+   %ifndef BIN
+     global _norx_permutex 
+     global norx_permutex 
+   %endif
+   
 %define a eax
 %define b edx
 %define c esi
@@ -47,8 +52,8 @@
 %define t0 ebp
 %define t1 ebx
 
-_norx_permute:
-norx_permute:
+_norx_permutex:
+norx_permutex:
     pushad
     mov    edi, [esp+32+4] ; edi = state
     mov    ecx, [esp+32+8] ; ecx = rounds
@@ -83,16 +88,21 @@ e_l2:
     lea    d, [x+ebp*4]
     ; load ecx with rotate values
     ; 31, 16, 11, 8
-    mov    ecx, 080B101Fh
+    mov    ecx, 1F100B08h
     mov    t0, [b]
 q_l1:
     xor    ebx, ebx
 q_l2:
     ; x[a] = PLUS(x[a],x[b]);
-    add    t0, [a]
+    mov    t0, [a]
+    and    t0, [b]
+    add    t0, t0
+    xor    t0, [a]
+    xor    t0, [b]
     mov    [a], t0
-    ; x[d] = ROTR(XOR(x[d],x[a]), cl);
-    ; also x[b] = ROTR(XOR(x[b],x[c]), cl);
+
+    ; x[d] = ROTR(XOR(x[d], x[a]), cl);
+    ; also x[b] = ROTR(XOR(x[b], x[c]), cl);
     xor    t0, [d]
     ror    t0, cl
     mov    [d], t0
