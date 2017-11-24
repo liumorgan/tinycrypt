@@ -39,7 +39,8 @@ typedef union _norx_state_t {
 #define ROTL(x, c) ( ((x) << (c)) | ((x) >> (BITS(x) - (c))) )
 #define ROTR(x, c) ( ((x) >> (c)) | ((x) << (BITS(x) - (c))) )
 
-/* The nonlinear primitive */
+/* The non-linear primitive */
+// same as addition without using modular ADD
 #define H(A, B) ( ( (A) ^ (B) ) ^ ( ( (A) & (B) ) << 1) )
 
 void norx_permute(void *state)
