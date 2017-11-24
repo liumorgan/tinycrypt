@@ -30,7 +30,7 @@
 ; -----------------------------------------------
 ; NORX permutation function in x86 assembly
 ;
-; size: 117 bytes
+; size: 115 bytes
 ;
 ; global calls use cdecl convention
 ;
@@ -44,81 +44,67 @@
    %endif
    
 %define a eax
-%define b edx
-%define c esi
+%define b ebx
+%define c edx
 %define d edi
-%define x edi
 
-%define t0 ebp
-%define t1 ebx
+%define x edi
+%define t ebp
+%define r ecx
 
 _norx_permutex:
 norx_permutex:
     pushad
-    mov    edi, [esp+32+4] ; edi = state
     mov    ecx, [esp+32+8] ; ecx = rounds
-e_l1:
+nrx_main:
     call   load_idx
-    dw     0c840H, 0d951H, 0ea62H, 0fb73H
-    dw     0fa50H, 0cb61H, 0d872H, 0e943H
+    dw     040c8H, 051d9H, 062eaH, 073fbH
+    dw     050faH, 061cbH, 072d8H, 043e9H
 load_idx:
-    pop    esi  ; pointer to indexes
-    push   ecx
-    mov    cl, 8
-e_l2:
-    lodsw
-    ; -----------------------------
-    pushad
-    push   a
-    xchg   ah, al
+    pop    esi   
+    push   ecx             ; save rounds
+    mov    cl, 8           ; load 8 16-bit values 
+nrx_perm:
+    mov    edi, [esp+32+8] ; ebx = state
+    lodsb
     aam    16
-
-    movzx  ebp, ah
-    movzx  c, al
-
-    pop    a
+    movzx  c, al    
+    movzx  ebp, ah   
+    
+    lodsb
     aam    16
-
     movzx  b, ah
     movzx  a, al
-
+    
     lea    a, [x+a*4]
     lea    b, [x+b*4]
     lea    c, [x+c*4]
     lea    d, [x+ebp*4]
-    ; load ecx with rotate values
-    ; 31, 16, 11, 8
-    mov    ecx, 1F100B08h
-    mov    t0, [b]
-q_l1:
-    xor    ebx, ebx
-q_l2:
-    ; x[a] = PLUS(x[a],x[b]);
-    mov    t0, [a]
-    and    t0, [b]
-    add    t0, t0
-    xor    t0, [a]
-    xor    t0, [b]
-    mov    [a], t0
 
-    ; x[d] = ROTR(XOR(x[d], x[a]), cl);
-    ; also x[b] = ROTR(XOR(x[b], x[c]), cl);
-    xor    t0, [d]
-    ror    t0, cl
-    mov    [d], t0
-    xchg   cl, ch
-    xchg   c, a
-    xchg   d, b
-    dec    ebx
-    jp     q_l2
-    ; --------------------------------------------
-    shr    ecx, 16
-    jnz    q_l1
-    popad
+    push   ecx          ; save index counter
+    mov    r, 1F100B08h ; load rotation values
+nrx_rnd:
+    mov    t, [a]
+    and    t, [b]
+    shl    t, 1
+    xor    t, [a]
+    xor    t, [b]
+    mov    [a], t
     
-    loop   e_l2
+    xor    t, [d]
+    ror    t, cl
+    mov    [d], t
+    
+    xchg   c, a
+    xchg   d, b 
+    
+    shr    r, 8       ; shift until all done 
+    jnz    nrx_rnd
+    
     pop    ecx
-    loop   e_l1
-    ; restore registers
+    loop   nrx_perm
+    pop    ecx
+    loop   nrx_main
     popad
     ret
+    

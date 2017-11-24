@@ -83,6 +83,9 @@ load_iv:
 ; void chacha_permute(chacha_blk *blk, uint16_t index)
 chacha_permute:
     pushad
+    
+    ;int3
+    
     push   a
     xchg   ah, al
     aam    16
@@ -105,8 +108,6 @@ chacha_permute:
     mov    ecx, 07080C10h
     mov    t0, [b]
 q_l1:
-    xor    ebx, ebx
-q_l2:
     ; x[a] = PLUS(x[a],x[b]);
     add    t0, [a]
     mov    [a], t0
@@ -115,13 +116,10 @@ q_l2:
     xor    t0, [d]
     rol    t0, cl
     mov    [d], t0
-    xchg   cl, ch
     xchg   c, a
     xchg   d, b
-    dec    ebx
-    jp     q_l2
     ; --------------------------------------------
-    shr    ecx, 16
+    shr    ecx, 8
     jnz    q_l1
 
     popad
