@@ -59,26 +59,12 @@ void xchacha_permute (w512_t *state, w512_t *out)
         r = 0x07080C10;
         
         do {
-          for (k=0; k<2; k++) {
-            x[a]+= x[b]; 
-            x[d] = ROTL32(x[d] ^ x[a], (r & 0xFF));
-            XCHG(a, c);
-            XCHG(b, d);
-            r >>= 8;            
-          }
+          x[a]+= x[b]; 
+          x[d] = ROTL32(x[d] ^ x[a], (r & 0xFF));
+          XCHG(a, c);
+          XCHG(b, d);
+          r >>= 8;            
         } while (r != 0);
-        /**
-        x[a]+= x[b]; 
-        x[d] = ROTL32(x[d] ^ x[a],16);
-        
-        x[c]+= x[d]; 
-        x[b] = ROTL32(x[b] ^ x[c],12);        
-
-        x[a]+= x[b]; 
-        x[d] = ROTL32(x[d] ^ x[a], 8);        
-
-        x[c]+= x[d]; 
-        x[b] = ROTL32(x[b] ^ x[c], 7);*/
       }
     }
     // add state to out
@@ -86,12 +72,12 @@ void xchacha_permute (w512_t *state, w512_t *out)
       out->w[i] += state->w[i];
     }
     // update counter
-    state->q[6]++;
+    state->w[12]++;
     // stopping at 2^70 bytes per nonce is user's responsibility
 }
 
 // encrypt or decrypt stream of bytes
-void chacha20 (uint32_t len, void *in, w512_t *s) 
+void xchacha20 (uint32_t len, void *in, w512_t *s) 
 {
     uint8_t *p=(uint8_t*)in;
     int     r, i;
@@ -122,11 +108,11 @@ void chacha20 (uint32_t len, void *in, w512_t *s)
       // store 256-bit key
       memcpy (&s->b[16], p, 32);      
       
-      // initialize 64-bit counter
-      s->w[12] = 0; s->w[13] = 0;
+      // initialize 32-bit counter
+      s->w[12] = 1;
       
       // store 64-bit nonce
-      memcpy (&s->b[56], &p[32], 8);   
+      memcpy (&s->w[13], &p[32], 12);   
     }
 }
 

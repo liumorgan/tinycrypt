@@ -30,7 +30,7 @@
 ; -----------------------------------------------
 ; ChaCha20 stream cipher in x86 assembly
 ;
-; size: 231 bytes
+; size: 221 bytes
 ;
 ; global calls use cdecl convention
 ;
@@ -73,29 +73,25 @@ load_iv:
     ret
 
 %define a eax
-%define b edx
-%define c esi
+%define b ebx
+%define c edx
 %define d edi
-%define x edi
 
-%define t0 ebp
+%define x edi
+%define t ebp
+%define r ecx
 
 ; void chacha_permute(chacha_blk *blk, uint16_t index)
 chacha_permute:
     pushad
-    
-    ;int3
-    
-    push   a
-    xchg   ah, al
+
+    lodsb
     aam    16
-
-    movzx  ebp, ah
-    movzx  c, al
-
-    pop    a
+    movzx  c, al    
+    movzx  ebp, ah   
+    
+    lodsb
     aam    16
-
     movzx  b, ah
     movzx  a, al
 
@@ -106,16 +102,17 @@ chacha_permute:
     ; load ecx with rotate values
     ; 16, 12, 8, 7
     mov    ecx, 07080C10h
-    mov    t0, [b]
+    ;mov    ecx, 100C0807h ; 07080C10h
+    mov    t, [b]
 q_l1:
     ; x[a] = PLUS(x[a],x[b]);
-    add    t0, [a]
-    mov    [a], t0
+    add    t, [a]
+    mov    [a], t
     ; x[d] = ROTATE(XOR(x[d],x[a]),cl);
     ; also x[b] = ROTATE(XOR(x[b],x[c]),cl);
-    xor    t0, [d]
-    rol    t0, cl
-    mov    [d], t0
+    xor    t, [d]
+    rol    t, cl
+    mov    [d], t
     xchg   c, a
     xchg   d, b
     ; --------------------------------------------
@@ -140,24 +137,22 @@ cc20_streamx:
 
     pop    edi
     push   edi
-    push   20/2  ; 20 rounds
-    pop    ebp
+    mov    cl, 20/2
 e_l1:
     ; load indexes
     call   load_idx
-    dw     0c840H, 0d951H
-    dw     0ea62H, 0fb73H
-    dw     0fa50H, 0cb61H
-    dw     0d872H, 0e943H
+    dw     040c8H, 051d9H, 062eaH, 073fbH
+    dw     050faH, 061cbH, 072d8H, 043e9H
 load_idx:
     pop    esi  ; pointer to indexes
+    push   ecx
     mov    cl, 8
 e_l2:
-    lodsw
     call   chacha_permute
+    add    esi, 2
     loop   e_l2
-    dec    ebp
-    jnz    e_l1
+    pop    ecx
+    loop   e_l1
 
     ; add state to x
     mov    cl, 16
@@ -194,11 +189,11 @@ cc_l0:
     call    cc20_streamx
 cc_l1:
     mov     dl, byte[edi+eax]
-    xor     byte[ebx+eax], dl
+    xor     byte[ebx], dl
+    inc     ebx
     inc     eax
     cmp     al, 64
     loopnz  cc_l1
-    add     ebx, eax
     jmp     cc_l0
 cc_l2:
     popad

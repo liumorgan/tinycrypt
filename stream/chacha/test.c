@@ -10,7 +10,7 @@
 
 #include "cc20.h"
 
-/* 2.4.2.  Example and Test Vector for the ChaCha20 Cipher
+// 2.4.2.  Example and Test Vector for the ChaCha20 Cipher
 uint8_t key[]=
 { 0x00,0x01,0x02,0x03,0x04,0x05,0x06,0x07,
   0x08,0x09,0x0a,0x0b,0x0c,0x0d,0x0e,0x0f,
@@ -56,7 +56,7 @@ uint8_t output[]=
   0xb4,0x0b,0x8e,0xed,0xf2,0x78,0x5e,0x42,
   0x87,0x4d }; 
   
-*/
+/*
 // 256-bit key
 uint8_t key[32]=
 { 0xc4, 0x6e, 0xc1, 0xb1, 0x8c, 0xe8, 0xa8, 0x78,
@@ -81,7 +81,7 @@ uint8_t output[64]=
   0xd4, 0x06, 0x36, 0x2e, 0x8d, 0x69, 0xde, 0x7f,
   0x54, 0xc6, 0x04, 0xa6, 0xe0, 0x0f, 0x35, 0x3f,
   0x11, 0x0f, 0x77, 0x1b, 0xdc, 0xa8, 0xab, 0x92 };
-
+*/
 void dump_bytes (char *s, uint8_t b[], int len)
 {
   int i;
@@ -99,34 +99,34 @@ int main (void) {
   uint8_t    pt[64]={0};
   uint8_t    r, i;
   w512_t     s, k;
+  w512_t     *m;
   
   memcpy(k.b, key, 32); // init key
   memcpy(&k.b[32], nonce, 12); // init nonce
   
   // setup 256-bit key
-  cc20_setkeyx (&ctx, key, nonce);
-  //xchacha20 (0, &k, &s);
+  //cc20_setkeyx (&ctx, key, nonce);
+  xchacha20 (0, &k, &s);
 
-  /*
   printf ("\ncounter = %08x %08x\n", 
-    ctx.s.w[13], ctx.s.w[12]);
+    s.w[13], s.w[12]);
     
   for (i=0; i<10; i+= 2) {
     printf ("state[%02i - %02i] = 0x%08x 0x%08x\n", 
-      i, i+1, ctx.s.w[i], ctx.s.w[i+1]);
-  }*/
+      i, i+1, s.w[i], s.w[i+1]);
+  }
   
   printf ("\nencrypting block\n");  
-  cc20_encryptx (64, input, &ctx);
-  //xchacha20(64, input, &s);
+  //cc20_encryptx (64, input, &ctx);
+  xchacha20(64, input, &s);
 
-  /*printf ("\ncounter = %08x %08x\n", 
-    ctx.s.w[13], ctx.s.w[12]);
+  printf ("\ncounter = %08x %08x\n", 
+    s.w[13], s.w[12]);
     
   for (i=0; i<10; i+= 2) {
     printf ("state[%02i - %02i] = 0x%08x 0x%08x\n", 
-      i, i+1, ctx.s.w[i], ctx.s.w[i+1]);
-  }*/
+      i, i+1, s.w[i], s.w[i+1]);
+  }
   
   r=memcmp (input, output, 64)==0;
   printf ("\nEncryption test %s", r ? "passed":"failed");
@@ -134,8 +134,8 @@ int main (void) {
   dump_bytes ("ciphertext", input, 64);
   
   // do 20 rounds of decryption
-  cc20_setkeyx (&ctx, key, nonce);
-  cc20_encryptx (64, input, &ctx);
+  cc20_setkey (&ctx, key, nonce);
+  cc20_encrypt (64, input, &ctx);
   
   r=memcmp (input, pt, 64)==0;
   printf ("\nDecryption test %s", r ? "passed":"failed");

@@ -30,7 +30,7 @@
 ; -----------------------------------------------
 ; ChaCha20 stream cipher in x86 assembly
 ;
-; size: 210 bytes
+; size: 196 bytes
 ;
 ; global calls use cdecl convention
 ;
@@ -38,13 +38,26 @@
 
     bits 32
  
+struc pushad_t
+  _edi resd 1
+  _esi resd 1
+  _ebp resd 1
+  _esp resd 1
+  _ebx resd 1
+  _edx resd 1
+  _ecx resd 1
+  _eax resd 1
+  .size:
+endstruc
+ 
 %define a eax
-%define b edx
-%define c esi
+%define b ebx
+%define c edx
 %define d edi
-%define x edi
 
-%define t0 ebp
+%define x edi
+%define t ebp
+%define r ecx
  
     %ifndef BIN
       global xchacha20
@@ -59,22 +72,22 @@ _xchacha20:
     lodsd
     xchg   ecx, eax          ; ecx = len
     lodsd
-    xchg   edi, eax          ; edi = input or key+nonce
+    xchg   ebx, eax          ; edi = input or key+nonce
     lodsd
-    xchg   esi, eax          ; esi = state
     jecxz  init_key    
+    xchg   esi, eax          ; esi = state
     ; perform encryption/decryption
     pushad
     pushad
-    mov    ebx, esp          ; ebx = c
+    mov    edi, esp          ; edi = c
 cx_l0:
     xor    eax, eax
     jecxz  cc_l2             ; exit if len==0
     call   xchacha_permute
 cc_l1:
-    mov    dl, [ebx+eax]
-    xor    [edi], dl
-    inc    edi
+    mov    dl, [edi+eax]
+    xor    [ebx], dl
+    inc    ebx
     inc    eax
     cmp    al, 64
     loopne cc_l1
@@ -86,7 +99,8 @@ cc_l2:
     ret
     ; ----------------------------------
 init_key:
-    xchg   esi, edi  
+    xchg   eax, edi
+    mov    esi, ebx    
     ; copy "expand 32-byte k" into state
     mov    eax, 0x61707865
     stosd
@@ -101,6 +115,7 @@ init_key:
     rep    movsd
     ; set 32-bit counter to zero
     xchg   ecx, eax
+    inc    eax
     stosd
     ; store 96-bit nonce and return
     movsd
@@ -114,90 +129,71 @@ init_key:
 xchacha_permute:
     pushad
     xchg   eax, ecx
-    mov    edi, ebx
-    
-    ; copy state to out
     ; memcpy (out->b, state->b, 64);
     pushad
     mov    cl, 16
     rep    movsd
-    popad
-    
-    push   esi
     mov    cl, 20/2
-e_l1:
-    ; load indexes
+nrx_main:
     call   load_idx
-    dw     0c840H, 0d951H
-    dw     0ea62H, 0fb73H
-    dw     0fa50H, 0cb61H
-    dw     0d872H, 0e943H
+    dw     040c8H, 051d9H, 062eaH, 073fbH
+    dw     050faH, 061cbH, 072d8H, 043e9H
 load_idx:
-    pop    esi  ; pointer to indexes
-    push   ecx
-    mov    cl, 8
-e_l2:
-    lodsw    
+    pop    esi   
+    push   ecx               ; save rounds
+    mov    cl, 8             ; load 8 16-bit values 
+nrx_perm:
+    mov    edi, [esp+_edi+4] ; edi = out
+    lodsb
+    aam    16
+    movzx  c, al    
+    movzx  ebp, ah   
     
-    pushad
-    push   a
-    xchg   ah, al
+    lodsb
     aam    16
-
-    movzx  ebp, ah
-    movzx  c, al
-
-    pop    a
-    aam    16
-
     movzx  b, ah
     movzx  a, al
-
+    
     lea    a, [x+a*4]
     lea    b, [x+b*4]
     lea    c, [x+c*4]
     lea    d, [x+ebp*4]
-    ; load ecx with rotate values
-    ; 16, 12, 8, 7
-    mov    ecx, 07080C10h
-    mov    t0, [b]
-q_l1:
-    xor    ebx, ebx
-q_l2:
-    ; x[a] += x[b];
-    add    t0, [a]
-    mov    [a], t0
-    ; x[d] = ROTL32(x[d] ^ x[a], cl);
-    ; also x[b] = ROTL32(x[b] ^ x[c], cl);
-    xor    t0, [d]
-    rol    t0, cl
-    mov    [d], t0
-    xchg   cl, ch
-    xchg   c, a
-    xchg   d, b
-    dec    ebx
-    jp     q_l2
-    ; --------------------------------------------
-    shr    ecx, 16
-    jnz    q_l1
 
-    popad
-    loop   e_l2
+    push   ecx          ; save index counter
+    mov    r, 07080C10h ; load rotation values
+nrx_rnd:
+    mov    t, [b]
+    add    [a], t
+    
+    mov    t, [d]    
+    xor    t, [a]
+    rol    t, cl
+    mov    [d], t
+    
+    xchg   a, c
+    xchg   b, d 
+    
+    shr    r, 8       ; shift until all done 
+    jnz    nrx_rnd
     
     pop    ecx
-    loop   e_l1
+    loop   nrx_perm
     
-    pop    esi
+    pop    ecx
+    loop   nrx_main    
+    
+    popad
     
     ; add state to x
     mov    cl, 16
 add_state:
-    mov    eax, [esi+ecx*4-4]
-    add    [ebx+ecx*4-4], eax
+    lodsd
+    add    [edi], eax
+    scasd
     loop   add_state
 
     ; update 32-bit counter
-    inc    dword[esi+12*4]
+    inc    dword[esi-4*4]
     popad
     ret
     
