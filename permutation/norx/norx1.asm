@@ -22,20 +22,20 @@ _r$ = -4						; size = 4
 _s$ = 8							; size = 4
 _F	PROC						; COMDAT
 
-; 59   : {
+; 76   : {
 
 	push	ebp
 	mov	ebp, esp
 	sub	esp, 32					; 00000020H
 
-; 60   :     int         i;
-; 61   :     uint32_t    a, b, c, d, r, t, idx;
-; 62   :     
-; 63   :     uint16_t idx16[8]=
-; 64   :     { 0xC840, 0xD951, 0xEA62, 0xFB73,    // column index
-; 65   :       0xFA50, 0xCB61, 0xD872, 0xE943 };  // diagnonal index
-; 66   :     
-; 67   :     for (i=0; i<8; i++) {
+; 77   :     int         i;
+; 78   :     uint32_t    a, b, c, d, r, t, idx;
+; 79   :     
+; 80   :     uint16_t idx16[8]=
+; 81   :     { 0xC840, 0xD951, 0xEA62, 0xFB73,    // column index
+; 82   :       0xFA50, 0xCB61, 0xD872, 0xE943 };  // diagnonal index
+; 83   :     
+; 84   :     for (i=0; i<8; i++) {
 
 	and	DWORD PTR _i$[ebp], 0
 	mov	eax, 51264				; 0000c840H
@@ -60,18 +60,18 @@ _F	PROC						; COMDAT
 	mov	WORD PTR _idx16$[ebp+14], ax
 $LL12@F:
 
-; 68   :       idx = idx16[i];
+; 85   :       idx = idx16[i];
 
 	mov	eax, DWORD PTR _i$[ebp]
 	movzx	eax, WORD PTR _idx16$[ebp+eax*2]
 
-; 69   :         
-; 70   :       a = (idx         & 0xF);
-; 71   :       b = ((idx >>  4) & 0xF);
+; 86   :         
+; 87   :       a = (idx         & 0xF);
+; 88   :       b = ((idx >>  4) & 0xF);
 
 	mov	edx, eax
 
-; 72   :       c = ((idx >>  8) & 0xF);
+; 89   :       c = ((idx >>  8) & 0xF);
 
 	mov	ecx, eax
 	mov	esi, eax
@@ -81,7 +81,7 @@ $LL12@F:
 	shr	ecx, 8
 	and	ecx, ebx
 
-; 73   :       d = ((idx >> 12) & 0xF);
+; 90   :       d = ((idx >> 12) & 0xF);
 
 	shr	eax, 12					; 0000000cH
 	and	esi, ebx
@@ -90,16 +90,16 @@ $LL12@F:
 	mov	DWORD PTR _c$[ebp], ecx
 	mov	DWORD PTR _d$[ebp], eax
 
-; 74   :   
-; 75   :       r = 0x1F100B08;
+; 91   :   
+; 92   :       r = 0x1F100B08;
 
 	mov	DWORD PTR _r$[ebp], 521145096		; 1f100b08H
 $LL3@F:
 
-; 76   :       
-; 77   :       /* The quarter-round */
-; 78   :       do {
-; 79   :         s[a] = H(s[a], s[b]); 
+; 93   :       
+; 94   :       /* The quarter-round */
+; 95   :       do {
+; 96   :         s[a] = H(s[a], s[b]); 
 
 	mov	ebx, DWORD PTR [edi+esi*4]
 	mov	ecx, DWORD PTR [edi+edx*4]
@@ -108,15 +108,15 @@ $LL3@F:
 	add	eax, eax
 	xor	eax, ebx
 
-; 80   :         s[d] = ROTR(s[d] ^ s[a], r & 0xFF);
+; 97   :         s[d] = ROTR(s[d] ^ s[a], r & 0xFF);
 
 	mov	ebx, DWORD PTR _d$[ebp]
 	xor	eax, ecx
 	movzx	ecx, BYTE PTR _r$[ebp]
 
-; 81   :         XCHG(c, a);
-; 82   :         XCHG(d, b);
-; 83   :         r >>= 8;
+; 98   :         XCHG(c, a);
+; 99   :         XCHG(d, b);
+; 100  :         r >>= 8;
 
 	shr	DWORD PTR _r$[ebp], 8
 	mov	DWORD PTR [edi+esi*4], eax
@@ -125,7 +125,7 @@ $LL3@F:
 	mov	eax, DWORD PTR _d$[ebp]
 	ror	ebx, cl
 
-; 84   :       } while (r != 0);
+; 101  :       } while (r != 0);
 
 	cmp	DWORD PTR _r$[ebp], 0
 	mov	ecx, DWORD PTR _c$[ebp]
@@ -136,14 +136,14 @@ $LL3@F:
 	mov	edx, eax
 	jne	SHORT $LL3@F
 
-; 60   :     int         i;
-; 61   :     uint32_t    a, b, c, d, r, t, idx;
-; 62   :     
-; 63   :     uint16_t idx16[8]=
-; 64   :     { 0xC840, 0xD951, 0xEA62, 0xFB73,    // column index
-; 65   :       0xFA50, 0xCB61, 0xD872, 0xE943 };  // diagnonal index
-; 66   :     
-; 67   :     for (i=0; i<8; i++) {
+; 77   :     int         i;
+; 78   :     uint32_t    a, b, c, d, r, t, idx;
+; 79   :     
+; 80   :     uint16_t idx16[8]=
+; 81   :     { 0xC840, 0xD951, 0xEA62, 0xFB73,    // column index
+; 82   :       0xFA50, 0xCB61, 0xD872, 0xE943 };  // diagnonal index
+; 83   :     
+; 84   :     for (i=0; i<8; i++) {
 
 	inc	DWORD PTR _i$[ebp]
 	cmp	DWORD PTR _i$[ebp], 8
@@ -152,8 +152,8 @@ $LL3@F:
 	pop	esi
 	pop	ebx
 
-; 85   :     }    
-; 86   : }
+; 102  :     }    
+; 103  : }
 
 	leave
 	ret	0
@@ -166,20 +166,20 @@ _TEXT	SEGMENT
 _state$ = 8						; size = 4
 _norx_permute PROC					; COMDAT
 
-; 90   : {
+; 107  : {
 
 	push	esi
 
-; 91   :     size_t i;
-; 92   :     norx_word_t * S = state->S;
-; 93   : 
-; 94   :     for (i = 0; i < NORX_L; ++i) {
+; 108  :     size_t i;
+; 109  :     norx_word_t * S = state->S;
+; 110  : 
+; 111  :     for (i = 0; i < NORX_L; ++i) {
 
 	push	4
 	pop	esi
 $LL3@norx_permu:
 
-; 95   :         F(S);
+; 112  :         F(S);
 
 	push	DWORD PTR _state$[esp]
 	call	_F
@@ -188,230 +188,117 @@ $LL3@norx_permu:
 	jne	SHORT $LL3@norx_permu
 	pop	esi
 
-; 96   :     }
-; 97   : }
+; 113  :     }
+; 114  : }
 
 	ret	0
 _norx_permute ENDP
-_TEXT	ENDS
-PUBLIC	_norx_pad
-; Function compile flags: /Ogspy
-;	COMDAT _norx_pad
-_TEXT	SEGMENT
-_out$ = 8						; size = 4
-_in$ = 12						; size = 4
-_inlen$ = 16						; size = 4
-_norx_pad PROC						; COMDAT
-
-; 101  :     memset(out, 0, BYTES(NORX_R));
-
-	mov	edx, DWORD PTR _out$[esp-4]
-	push	esi
-
-; 102  :     memcpy(out, in, inlen);
-
-	mov	esi, DWORD PTR _in$[esp]
-	push	edi
-	push	48					; 00000030H
-	pop	ecx
-	xor	al, al
-	mov	edi, edx
-	rep stosb
-	mov	eax, DWORD PTR _inlen$[esp+4]
-	mov	edi, edx
-	mov	ecx, eax
-	rep movsb
-	pop	edi
-
-; 103  :     
-; 104  :     out[inlen] = 0x01;
-
-	mov	BYTE PTR [edx+eax], 1
-
-; 105  :     out[BYTES(NORX_R) - 1] |= 0x80;
-
-	or	BYTE PTR [edx+47], 128			; 00000080H
-	pop	esi
-
-; 106  : }
-
-	ret	0
-_norx_pad ENDP
 _TEXT	ENDS
 PUBLIC	_norx_absorb_block
 ; Function compile flags: /Ogspy
 ;	COMDAT _norx_absorb_block
 _TEXT	SEGMENT
-_lastblock$ = -48					; size = 48
-_state$ = 8						; size = 4
-_in$ = 12						; size = 4
-_inlen$ = 16						; size = 4
-_tag$ = 20						; size = 4
+_block$ = -92						; size = 192
+_state$ = 108						; size = 4
+_out$ = 112						; size = 4
+_in$ = 116						; size = 4
+_inlen$ = 120						; size = 4
+_tag$ = 124						; size = 4
 _norx_absorb_block PROC					; COMDAT
 
-; 110  : {
+; 119  : {
 
 	push	ebp
-	mov	ebp, esp
-	sub	esp, 48					; 00000030H
+	lea	ebp, DWORD PTR [esp-100]
 
-; 111  :     size_t i;
-; 112  :     norx_word_t * S = state->S;
-; 113  :     uint8_t lastblock[BYTES(NORX_R)];
-; 114  :     uint32_t *p=(uint32_t*)in;
-; 115  :     
-; 116  :     if (inlen < BYTES(NORX_R)) {
+; 120  :     size_t i;
+; 121  :     norx_word_t * S = state->S;
+; 122  :     norx_word_t block[BYTES(NORX_R)];
+; 123  :     
+; 124  :     S[15] ^= tag;
 
-	cmp	DWORD PTR _inlen$[ebp], 48		; 00000030H
-	push	esi
-	push	edi
-	mov	edi, DWORD PTR _in$[ebp]
-	jae	SHORT $LN4@norx_absor
-
-; 117  :       norx_pad(lastblock, (uint8_t*)in, inlen);
-
-	push	DWORD PTR _inlen$[ebp]
-	lea	eax, DWORD PTR _lastblock$[ebp]
-	push	edi
-	push	eax
-	call	_norx_pad
-	add	esp, 12					; 0000000cH
-
-; 118  :       p=(uint32_t*)lastblock;
-
-	lea	edi, DWORD PTR _lastblock$[ebp]
-$LN4@norx_absor:
-
-; 119  :     }
-; 120  :     S[15] ^= tag;
-
-	mov	esi, DWORD PTR _state$[ebp]
 	mov	eax, DWORD PTR _tag$[ebp]
-	xor	DWORD PTR [esi+60], eax
-
-; 121  :     norx_permute(state);
-
+	sub	esp, 192				; 000000c0H
+	push	ebx
+	mov	ebx, DWORD PTR _state$[ebp]
+	xor	DWORD PTR [ebx+60], eax
 	push	esi
+	push	edi
+
+; 125  :     norx_permute(state);
+
+	push	ebx
 	call	_norx_permute
+
+; 126  : 
+; 127  :     memset(block, 0, sizeof(block));
+; 128  :     memcpy(block, in, inlen);
+
+	mov	edx, DWORD PTR _inlen$[ebp]
+	mov	esi, DWORD PTR _in$[ebp]
 	pop	ecx
-
-; 122  : 
-; 123  :     for (i = 0; i < WORDS(NORX_R); ++i) {
-
-	mov	ecx, edi
-	push	12					; 0000000cH
-	mov	eax, esi
-	sub	ecx, esi
-	pop	edx
-$LL3@norx_absor:
-
-; 124  :         S[i] ^= p[i];
-
-	mov	esi, DWORD PTR [ecx+eax]
-	xor	DWORD PTR [eax], esi
-	add	eax, 4
-	dec	edx
-	jne	SHORT $LL3@norx_absor
-	pop	edi
-	pop	esi
-
-; 125  :     }
-; 126  : }
-
-	leave
-	ret	0
-_norx_absorb_block ENDP
-_TEXT	ENDS
-PUBLIC	_norx_encrypt_block
-; Function compile flags: /Ogspy
-;	COMDAT _norx_encrypt_block
-_TEXT	SEGMENT
-_block$ = -48						; size = 48
-_state$ = 8						; size = 4
-_out$ = 12						; size = 4
-_in$ = 16						; size = 4
-_inlen$ = 20						; size = 4
-_norx_encrypt_block PROC				; COMDAT
-
-; 130  : {
-
-	push	ebp
-	mov	ebp, esp
-	sub	esp, 48					; 00000030H
-
-; 131  :     size_t i;
-; 132  :     norx_word_t * S = state->S;
-; 133  :     uint8_t block[BYTES(NORX_R)];
-; 134  :     uint32_t *p=(uint32_t*)in;
-; 135  :     
-; 136  :     if (inlen < BYTES(NORX_R)) {
-
-	cmp	DWORD PTR _inlen$[ebp], 48		; 00000030H
-	push	esi
-	push	edi
-	mov	edi, DWORD PTR _in$[ebp]
-	jge	SHORT $LN4@norx_encry
-
-; 137  :       norx_pad(block, (uint8_t*)in, inlen);
-
-	push	DWORD PTR _inlen$[ebp]
-	lea	eax, DWORD PTR _block$[ebp]
-	push	edi
-	push	eax
-	call	_norx_pad
-	add	esp, 12					; 0000000cH
-
-; 138  :       p=(uint32_t*)block;
-
+	xor	al, al
 	lea	edi, DWORD PTR _block$[ebp]
-$LN4@norx_encry:
+	mov	ecx, 192				; 000000c0H
+	rep stosb
+	lea	edi, DWORD PTR _block$[ebp]
+	mov	ecx, edx
+	rep movsb
 
-; 139  :     }
-; 140  :     
-; 141  :     S[15] ^= PAYLOAD_TAG;
+; 129  :     
+; 130  :     if (inlen < BYTES(NORX_R)) {
 
-	mov	esi, DWORD PTR _state$[ebp]
-	xor	DWORD PTR [esi+60], 2
+	cmp	edx, 48					; 00000030H
+	jae	SHORT $LN5@norx_absor
 
-; 142  :     norx_permute(state);
+; 131  :       ((uint8_t*)block)[inlen] = 0x01;
 
-	push	esi
-	call	_norx_permute
-	pop	ecx
+	mov	BYTE PTR _block$[ebp+edx], 1
 
-; 143  : 
-; 144  :     for (i=0; i<WORDS(NORX_R); i++) {
+; 132  :       ((uint8_t*)block)[BYTES(NORX_R) - 1] |= 0x80;
 
-	mov	ecx, edi
+	or	BYTE PTR _block$[ebp+47], 128		; 00000080H
+$LN5@norx_absor:
+
+; 133  :     }
+; 134  :     
+; 135  :     for (i = 0; i < WORDS(NORX_R); ++i) {
+
+	lea	ecx, DWORD PTR _block$[ebp]
 	push	12					; 0000000cH
-	mov	eax, esi
-	sub	ecx, esi
-	pop	edx
-$LL3@norx_encry:
+	mov	eax, ebx
+	sub	ecx, ebx
+	pop	esi
+$LL4@norx_absor:
 
-; 145  :       S[i] ^= p[i];
+; 136  :         S[i] ^= block[i];
 
 	mov	edi, DWORD PTR [ecx+eax]
 	xor	DWORD PTR [eax], edi
 	add	eax, 4
-	dec	edx
-	jne	SHORT $LL3@norx_encry
+	dec	esi
+	jne	SHORT $LL4@norx_absor
 
-; 146  :     }
-; 147  :     memcpy(out, S, inlen);
+; 137  :     }
+; 138  :     if (tag==PAYLOAD_TAG) memcpy(out, S, inlen);
 
+	cmp	DWORD PTR _tag$[ebp], 2
+	jne	SHORT $LN1@norx_absor
 	mov	edi, DWORD PTR _out$[ebp]
-	mov	ecx, DWORD PTR _inlen$[ebp]
+	mov	esi, ebx
+	mov	ecx, edx
 	rep movsb
+$LN1@norx_absor:
 	pop	edi
 	pop	esi
+	pop	ebx
 
-; 148  :     
-; 149  : }
+; 139  : }
 
+	add	ebp, 100				; 00000064H
 	leave
 	ret	0
-_norx_encrypt_block ENDP
+_norx_absorb_block ENDP
 _TEXT	ENDS
 PUBLIC	_norx_decrypt_block
 ; Function compile flags: /Ogspy
@@ -424,32 +311,33 @@ _in$ = 120						; size = 4
 _len$ = 124						; size = 4
 _norx_decrypt_block PROC				; COMDAT
 
-; 153  : {
+; 143  : {
 
 	push	ebp
 	lea	ebp, DWORD PTR [esp-104]
 	sub	esp, 192				; 000000c0H
 	push	ebx
 
-; 154  :     size_t      i;
-; 155  :     norx_word_t *S = state->S;
-; 156  :     norx_word_t block[BYTES(NORX_R)];
-; 157  :     
-; 158  :     S[15] ^= PAYLOAD_TAG;
+; 144  :     size_t      i;
+; 145  :     norx_word_t *S = state->S;
+; 146  :     norx_word_t block[BYTES(NORX_R)];
+; 147  :     norx_word_t t;
+; 148  :     
+; 149  :     S[15] ^= PAYLOAD_TAG;
 
 	mov	ebx, DWORD PTR _state$[ebp]
 	xor	DWORD PTR [ebx+60], 2
 	push	esi
 	push	edi
 
-; 159  :     norx_permute(state);
+; 150  :     norx_permute(state);
 
 	push	ebx
 	call	_norx_permute
 
-; 160  : 
-; 161  :     memcpy (block, S, BYTES(NORX_R));
-; 162  :     memcpy (block, in, len);
+; 151  : 
+; 152  :     memcpy (block, S, BYTES(NORX_R));
+; 153  :     memcpy (block, in, len);
 
 	mov	eax, DWORD PTR _len$[ebp]
 	pop	ecx
@@ -463,52 +351,54 @@ _norx_decrypt_block PROC				; COMDAT
 	mov	ecx, eax
 	rep movsb
 
-; 163  :       
-; 164  :     if (len < BYTES(NORX_R)) {      
+; 154  :       
+; 155  :     if (len < BYTES(NORX_R)) {      
 
 	cmp	eax, 48					; 00000030H
 	jge	SHORT $LN4@norx_decry
 
-; 165  :       ((uint8_t*)block)[len] ^= 0x01;
+; 156  :       ((uint8_t*)block)[len] ^= 0x01;
 
 	lea	eax, DWORD PTR _block$[ebp+eax]
 	xor	BYTE PTR [eax], 1
 
-; 166  :       ((uint8_t*)block)[BYTES(NORX_R) - 1] ^= 0x80;
+; 157  :       ((uint8_t*)block)[BYTES(NORX_R) - 1] ^= 0x80;
 
 	xor	BYTE PTR _block$[ebp+47], 128		; 00000080H
 $LN4@norx_decry:
 
-; 167  :     }
-; 168  :     
-; 169  :     for (i = 0; i < WORDS(NORX_R); ++i) {
+; 158  :     }
+; 159  :     
+; 160  :     for (i=0; i<WORDS(NORX_R); i++) {
 
-	lea	edx, DWORD PTR _block$[ebp]
-	push	12					; 0000000cH
-	mov	eax, ebx
-	sub	edx, ebx
-	pop	esi
+	mov	edi, ebx
+	lea	eax, DWORD PTR _block$[ebp]
+	xor	esi, esi
+	sub	edi, eax
 $LL3@norx_decry:
+	lea	ecx, DWORD PTR [edi+esi*4]
+	lea	eax, DWORD PTR _block$[ebp+esi*4]
 
-; 170  :         const norx_word_t c = block[i];
+; 161  :       t = block[i];  
 
-	mov	ecx, DWORD PTR [edx+eax]
+	mov	edx, DWORD PTR [eax]
+	lea	ecx, DWORD PTR _block$[ebp+ecx]
 
-; 171  :         block[i] = S[i] ^ c;
+; 162  :       block[i] ^= S[i];
 
-	mov	edi, DWORD PTR [eax]
-	xor	edi, ecx
-	mov	DWORD PTR [edx+eax], edi
+	mov	ebx, DWORD PTR [ecx]
+	xor	ebx, edx
+	inc	esi
+	mov	DWORD PTR [eax], ebx
 
-; 172  :         S[i] = c;
+; 163  :       S[i] = t;
 
-	mov	DWORD PTR [eax], ecx
-	add	eax, 4
-	dec	esi
-	jne	SHORT $LL3@norx_decry
+	mov	DWORD PTR [ecx], edx
+	cmp	esi, 12					; 0000000cH
+	jb	SHORT $LL3@norx_decry
 
-; 173  :     }
-; 174  :     memcpy(out, block, len);
+; 164  :     }
+; 165  :     memcpy(out, block, len);
 
 	mov	edi, DWORD PTR _out$[ebp]
 	mov	ecx, DWORD PTR _len$[ebp]
@@ -518,7 +408,7 @@ $LL3@norx_decry:
 	pop	esi
 	pop	ebx
 
-; 175  : }
+; 166  : }
 
 	add	ebp, 104				; 00000068H
 	leave
@@ -534,16 +424,16 @@ _key$ = 12						; size = 4
 _nonce$ = 16						; size = 4
 _norx_init PROC						; COMDAT
 
-; 179  : {
+; 170  : {
 
 	push	ebx
 
-; 180  :     norx_word_t * S = state->S;
-; 181  :     size_t i;
-; 182  :     norx_word_t *k=(norx_word_t*)key;
-; 183  :     norx_word_t *n=(norx_word_t*)nonce;
-; 184  :     
-; 185  :     for (i=0; i<16; i++) {
+; 171  :     norx_word_t * S = state->S;
+; 172  :     size_t i;
+; 173  :     norx_word_t *k=(norx_word_t*)key;
+; 174  :     norx_word_t *n=(norx_word_t*)nonce;
+; 175  :     
+; 176  :     for (i=0; i<16; i++) {
 
 	mov	ebx, DWORD PTR _state$[esp]
 	push	esi
@@ -551,24 +441,24 @@ _norx_init PROC						; COMDAT
 	xor	eax, eax
 $LL6@norx_init:
 
-; 186  :       S[i] = i;
+; 177  :       S[i] = i;
 
 	mov	DWORD PTR [ebx+eax*4], eax
 	inc	eax
 	cmp	eax, 16					; 00000010H
 	jb	SHORT $LL6@norx_init
 
-; 187  :     }
-; 188  : 
-; 189  :     F(S); F(S);
+; 178  :     }
+; 179  : 
+; 180  :     F(S); F(S);
 
 	push	ebx
 	call	_F
 	push	ebx
 	call	_F
 
-; 190  : 
-; 191  :     memcpy(&S[0], nonce, 16);
+; 181  : 
+; 182  :     memcpy(&S[0], nonce, 16);
 
 	mov	esi, DWORD PTR _nonce$[esp+16]
 	push	16					; 00000010H
@@ -576,7 +466,7 @@ $LL6@norx_init:
 	mov	edi, ebx
 	rep movsb
 
-; 192  :     memcpy(&S[4], key,   16);
+; 183  :     memcpy(&S[4], key,   16);
 
 	mov	esi, DWORD PTR _key$[esp+16]
 	push	16					; 00000010H
@@ -584,31 +474,31 @@ $LL6@norx_init:
 	lea	edi, DWORD PTR [ebx+16]
 	rep movsb
 
-; 193  : 
-; 194  :     S[12] ^= NORX_W;
-; 195  :     S[13] ^= NORX_L;
+; 184  : 
+; 185  :     S[12] ^= NORX_W;
+; 186  :     S[13] ^= NORX_L;
 
 	xor	DWORD PTR [ebx+52], 4
 
-; 196  :     S[14] ^= NORX_P;
+; 187  :     S[14] ^= NORX_P;
 
 	xor	DWORD PTR [ebx+56], 1
 
-; 197  :     S[15] ^= NORX_T;
+; 188  :     S[15] ^= NORX_T;
 
 	xor	DWORD PTR [ebx+60], 128			; 00000080H
 	lea	esi, DWORD PTR [ebx+48]
 	xor	DWORD PTR [esi], 32			; 00000020H
 
-; 198  : 
-; 199  :     norx_permute(state);
+; 189  : 
+; 190  :     norx_permute(state);
 
 	push	ebx
 	call	_norx_permute
 	add	esp, 12					; 0000000cH
 
-; 200  : 
-; 201  :     for (i=0; i<4; i++) S[i+12] ^= k[i];
+; 191  : 
+; 192  :     for (i=0; i<4; i++) S[i+12] ^= k[i];
 
 	xor	eax, eax
 $LL3@norx_init:
@@ -620,7 +510,7 @@ $LL3@norx_init:
 	cmp	eax, 4
 	jb	SHORT $LL3@norx_init
 
-; 202  : }
+; 193  : }
 
 	pop	edi
 	pop	esi
@@ -638,15 +528,15 @@ _inlen$ = 16						; size = 4
 _tag$ = 20						; size = 4
 _norx_absorb_data PROC					; COMDAT
 
-; 206  : {
+; 197  : {
 
 	push	ebp
 	mov	ebp, esp
 	push	edi
 
-; 207  :     int len;
-; 208  :     
-; 209  :     while (inlen) {
+; 198  :     int len;
+; 199  :     
+; 200  :     while (inlen) {
 
 	mov	edi, DWORD PTR _inlen$[ebp]
 	test	edi, edi
@@ -654,7 +544,7 @@ _norx_absorb_data PROC					; COMDAT
 	push	esi
 $LL2@norx_absor@2:
 
-; 210  :       len = MIN(inlen, BYTES(NORX_R));
+; 201  :       len = MIN(inlen, BYTES(NORX_R));
 
 	cmp	edi, 48					; 00000030H
 	jae	SHORT $LN5@norx_absor@2
@@ -665,28 +555,29 @@ $LN5@norx_absor@2:
 	pop	esi
 $LN6@norx_absor@2:
 
-; 211  :       norx_absorb_block(state, (norx_word_t*)in, len, tag);
+; 202  :       norx_absorb_block(state, 0, (norx_word_t*)in, len, tag);
 
 	push	DWORD PTR _tag$[ebp]
 	push	esi
 	push	DWORD PTR _in$[ebp]
+	push	0
 	push	DWORD PTR _state$[ebp]
 	call	_norx_absorb_block
 
-; 212  :       
-; 213  :       inlen -= len;
-; 214  :       in += len;
+; 203  :       
+; 204  :       inlen -= len;
+; 205  :       in += len;
 
 	add	DWORD PTR _in$[ebp], esi
-	add	esp, 16					; 00000010H
+	add	esp, 20					; 00000014H
 	sub	edi, esi
 	jne	SHORT $LL2@norx_absor@2
 	pop	esi
 $LN1@norx_absor@2:
 	pop	edi
 
-; 215  :     }
-; 216  : }
+; 206  :     }
+; 207  : }
 
 	pop	ebp
 	ret	0
@@ -702,59 +593,60 @@ _in$ = 16						; size = 4
 _inlen$ = 20						; size = 4
 _norx_encrypt_data PROC					; COMDAT
 
-; 220  : {
+; 211  : {
 
 	push	ebp
 	mov	ebp, esp
 	push	edi
 
-; 221  :     int len;
-; 222  :     
-; 223  :     while (inlen) {
+; 212  :     int len;
+; 213  :     
+; 214  :     while (inlen) {
 
 	mov	edi, DWORD PTR _inlen$[ebp]
 	test	edi, edi
-	je	SHORT $LN1@norx_encry@2
+	je	SHORT $LN1@norx_encry
 	push	esi
-$LL2@norx_encry@2:
+$LL2@norx_encry:
 
-; 224  :       len = MIN(inlen, BYTES(NORX_R));
+; 215  :       len = MIN(inlen, BYTES(NORX_R));
 
 	cmp	edi, 48					; 00000030H
-	jae	SHORT $LN5@norx_encry@2
+	jae	SHORT $LN5@norx_encry
 	mov	esi, edi
-	jmp	SHORT $LN6@norx_encry@2
-$LN5@norx_encry@2:
+	jmp	SHORT $LN6@norx_encry
+$LN5@norx_encry:
 	push	48					; 00000030H
 	pop	esi
-$LN6@norx_encry@2:
+$LN6@norx_encry:
 
-; 225  :       norx_encrypt_block(state, (norx_word_t*)out, (norx_word_t*)in, len);
+; 216  :       norx_absorb_block(state, (norx_word_t*)out, (norx_word_t*)in, len, PAYLOAD_TAG);
 
+	push	2
 	push	esi
 	push	DWORD PTR _in$[ebp]
 	push	DWORD PTR _out$[ebp]
 	push	DWORD PTR _state$[ebp]
-	call	_norx_encrypt_block
+	call	_norx_absorb_block
 
-; 226  :       
-; 227  :       inlen -= len;
-; 228  :       in    += len;
+; 217  :       
+; 218  :       inlen -= len;
+; 219  :       in    += len;
 
 	add	DWORD PTR _in$[ebp], esi
 
-; 229  :       out   += len;
+; 220  :       out   += len;
 
 	add	DWORD PTR _out$[ebp], esi
-	add	esp, 16					; 00000010H
+	add	esp, 20					; 00000014H
 	sub	edi, esi
-	jne	SHORT $LL2@norx_encry@2
+	jne	SHORT $LL2@norx_encry
 	pop	esi
-$LN1@norx_encry@2:
+$LN1@norx_encry:
 	pop	edi
 
-; 230  :     }
-; 231  : }
+; 221  :     }
+; 222  : }
 
 	pop	ebp
 	ret	0
@@ -770,15 +662,15 @@ _in$ = 16						; size = 4
 _inlen$ = 20						; size = 4
 _norx_decrypt_data PROC					; COMDAT
 
-; 235  : {
+; 226  : {
 
 	push	ebp
 	mov	ebp, esp
 	push	edi
 
-; 236  :     int len;
-; 237  :     
-; 238  :     while (inlen) {
+; 227  :     int len;
+; 228  :     
+; 229  :     while (inlen) {
 
 	mov	edi, DWORD PTR _inlen$[ebp]
 	test	edi, edi
@@ -786,7 +678,7 @@ _norx_decrypt_data PROC					; COMDAT
 	push	esi
 $LL2@norx_decry@2:
 
-; 239  :       len = MIN(inlen, BYTES(NORX_R));
+; 230  :       len = MIN(inlen, BYTES(NORX_R));
 
 	cmp	edi, 48					; 00000030H
 	jae	SHORT $LN5@norx_decry@2
@@ -797,7 +689,7 @@ $LN5@norx_decry@2:
 	pop	esi
 $LN6@norx_decry@2:
 
-; 240  :       norx_decrypt_block(state, (norx_word_t*)out, (norx_word_t*)in, len);
+; 231  :       norx_decrypt_block(state, (norx_word_t*)out, (norx_word_t*)in, len);
 
 	push	esi
 	push	DWORD PTR _in$[ebp]
@@ -805,13 +697,13 @@ $LN6@norx_decry@2:
 	push	DWORD PTR _state$[ebp]
 	call	_norx_decrypt_block
 
-; 241  :       
-; 242  :       inlen -= len;
-; 243  :       in    += len;
+; 232  :       
+; 233  :       inlen -= len;
+; 234  :       in    += len;
 
 	add	DWORD PTR _in$[ebp], esi
 
-; 244  :       out   += len;
+; 235  :       out   += len;
 
 	add	DWORD PTR _out$[ebp], esi
 	add	esp, 16					; 00000010H
@@ -821,8 +713,8 @@ $LN6@norx_decry@2:
 $LN1@norx_decry@2:
 	pop	edi
 
-; 245  :     }
-; 246  : }
+; 236  :     }
+; 237  : }
 
 	pop	ebp
 	ret	0
@@ -838,7 +730,7 @@ _tag$ = 12						; size = 4
 _key$ = 16						; size = 4
 _norx_finalise PROC					; COMDAT
 
-; 250  : {
+; 241  : {
 
 	push	ebp
 	mov	ebp, esp
@@ -847,18 +739,18 @@ _norx_finalise PROC					; COMDAT
 	push	esi
 	push	edi
 
-; 251  :     norx_word_t * S = state->S;
-; 252  :     uint32_t lastblock[BYTES(NORX_C)];
-; 253  :     norx_word_t *k=(norx_word_t*)key;
-; 254  :     size_t i;
-; 255  :     
-; 256  :     S[15] ^= FINAL_TAG;
+; 242  :     norx_word_t * S = state->S;
+; 243  :     uint32_t lastblock[BYTES(NORX_C)];
+; 244  :     norx_word_t *k=(norx_word_t*)key;
+; 245  :     size_t i;
+; 246  :     
+; 247  :     S[15] ^= FINAL_TAG;
 
 	mov	edi, DWORD PTR _state$[ebp]
 	xor	DWORD PTR [edi+60], 8
 
-; 257  : 
-; 258  :     norx_permute(state);
+; 248  : 
+; 249  :     norx_permute(state);
 
 	push	edi
 	call	_norx_permute
@@ -866,8 +758,8 @@ _norx_finalise PROC					; COMDAT
 	lea	esi, DWORD PTR [edi+48]
 	pop	ecx
 
-; 259  : 
-; 260  :     for (i=0; i<4; i++) S[i+12] ^= k[i];
+; 250  : 
+; 251  :     for (i=0; i<4; i++) S[i+12] ^= k[i];
 
 	xor	ecx, ecx
 	mov	eax, esi
@@ -879,15 +771,15 @@ $LL9@norx_final:
 	cmp	ecx, 4
 	jb	SHORT $LL9@norx_final
 
-; 261  : 
-; 262  :     norx_permute(state);
+; 252  : 
+; 253  :     norx_permute(state);
 
 	push	edi
 	call	_norx_permute
 	pop	ecx
 
-; 263  : 
-; 264  :     for (i=0; i<4; i++) S[i+12] ^= k[i];
+; 254  : 
+; 255  :     for (i=0; i<4; i++) S[i+12] ^= k[i];
 
 	xor	ecx, ecx
 	mov	eax, esi
@@ -899,8 +791,8 @@ $LL6@norx_final:
 	cmp	ecx, 4
 	jb	SHORT $LL6@norx_final
 
-; 265  : 
-; 266  :     for (i=0; i<4; i++) lastblock[i] = S[i+12];
+; 256  : 
+; 257  :     for (i=0; i<4; i++) lastblock[i] = S[i+12];
 
 	lea	edi, DWORD PTR _lastblock$[ebp]
 	movsd
@@ -908,8 +800,8 @@ $LL6@norx_final:
 	movsd
 	movsd
 
-; 267  : 
-; 268  :     memcpy(tag, lastblock, BYTES(NORX_T));
+; 258  : 
+; 259  :     memcpy(tag, lastblock, BYTES(NORX_T));
 
 	mov	edi, DWORD PTR _tag$[ebp]
 	push	16					; 00000010H
@@ -920,7 +812,7 @@ $LL6@norx_final:
 	pop	esi
 	pop	ebx
 
-; 269  : }
+; 260  : }
 
 	leave
 	ret	0
@@ -934,13 +826,13 @@ _tag1$ = 8						; size = 4
 _tag2$ = 12						; size = 4
 _norx_verify_tag PROC					; COMDAT
 
-; 274  :     size_t i;
-; 275  :     unsigned acc = 0;
+; 265  :     size_t i;
+; 266  :     unsigned acc = 0;
 
 	mov	eax, DWORD PTR _tag2$[esp-4]
 
-; 276  : 
-; 277  :     for (i = 0; i < BYTES(NORX_T); ++i) {
+; 267  : 
+; 268  :     for (i = 0; i < BYTES(NORX_T); ++i) {
 
 	mov	ecx, DWORD PTR _tag1$[esp-4]
 	push	ebx
@@ -952,7 +844,7 @@ _norx_verify_tag PROC					; COMDAT
 	pop	esi
 $LL3@norx_verif:
 
-; 278  :         acc |= tag1[i] ^ tag2[i];
+; 269  :         acc |= tag1[i] ^ tag2[i];
 
 	movzx	edi, BYTE PTR [ecx+eax]
 	movzx	ebx, BYTE PTR [eax]
@@ -962,9 +854,9 @@ $LL3@norx_verif:
 	dec	esi
 	jne	SHORT $LL3@norx_verif
 
-; 279  :     }
-; 280  : 
-; 281  :     return (((acc - 1) >> 8) & 1) - 1;
+; 270  :     }
+; 271  : 
+; 272  :     return (((acc - 1) >> 8) & 1) - 1;
 
 	lea	eax, DWORD PTR [edx-1]
 	shr	eax, 8
@@ -974,7 +866,7 @@ $LL3@norx_verif:
 	dec	eax
 	pop	ebx
 
-; 282  : }
+; 273  : }
 
 	ret	0
 _norx_verify_tag ENDP
@@ -983,8 +875,7 @@ PUBLIC	_norx_aead_encrypt
 ; Function compile flags: /Ogspy
 ;	COMDAT _norx_aead_encrypt
 _TEXT	SEGMENT
-_state$ = -80						; size = 64
-_k$ = -16						; size = 16
+_state$ = -64						; size = 64
 _c$ = 8							; size = 4
 _clen$ = 12						; size = 4
 _a$ = 16						; size = 4
@@ -997,35 +888,25 @@ _nonce$ = 40						; size = 4
 _key$ = 44						; size = 4
 _norx_aead_encrypt PROC					; COMDAT
 
-; 293  : {
+; 284  : {
 
 	push	ebp
 	mov	ebp, esp
-	sub	esp, 80					; 00000050H
+	sub	esp, 64					; 00000040H
 	push	esi
-
-; 294  :     unsigned char k[BYTES(NORX_K)];
-; 295  :     norx_state_t state;
-; 296  : 
-; 297  :     memcpy(k, key, sizeof(k));
-
-	mov	esi, DWORD PTR _key$[ebp]
 	push	edi
-	push	16					; 00000010H
-	pop	ecx
 
-; 298  :     norx_init(state, k, nonce);
+; 285  :     norx_state_t state;
+; 286  : 
+; 287  :     norx_init(state, key, nonce);
 
 	push	DWORD PTR _nonce$[ebp]
-	lea	eax, DWORD PTR _k$[ebp]
-	push	eax
 	lea	eax, DWORD PTR _state$[ebp]
-	lea	edi, DWORD PTR _k$[ebp]
+	push	DWORD PTR _key$[ebp]
 	push	eax
-	rep movsb
 	call	_norx_init
 
-; 299  :     norx_absorb_data(state, a, alen, HEADER_TAG);
+; 288  :     norx_absorb_data(state, a, alen, HEADER_TAG);
 
 	push	1
 	push	DWORD PTR _alen$[ebp]
@@ -1034,7 +915,7 @@ _norx_aead_encrypt PROC					; COMDAT
 	push	eax
 	call	_norx_absorb_data
 
-; 300  :     norx_encrypt_data(state, c, m, mlen);
+; 289  :     norx_encrypt_data(state, c, m, mlen);
 
 	mov	esi, DWORD PTR _mlen$[ebp]
 	mov	edi, DWORD PTR _c$[ebp]
@@ -1045,7 +926,7 @@ _norx_aead_encrypt PROC					; COMDAT
 	push	eax
 	call	_norx_encrypt_data
 
-; 301  :     norx_absorb_data(state, z, zlen, TRAILER_TAG);
+; 290  :     norx_absorb_data(state, z, zlen, TRAILER_TAG);
 
 	push	4
 	push	DWORD PTR _zlen$[ebp]
@@ -1054,17 +935,16 @@ _norx_aead_encrypt PROC					; COMDAT
 	push	eax
 	call	_norx_absorb_data
 
-; 302  :     norx_finalise(state, c + mlen, k);
+; 291  :     norx_finalise(state, c + mlen, key);
 
-	lea	eax, DWORD PTR _k$[ebp]
-	push	eax
+	push	DWORD PTR _key$[ebp]
 	add	edi, esi
 	lea	eax, DWORD PTR _state$[ebp]
 	push	edi
 	push	eax
 	call	_norx_finalise
 
-; 303  :     *clen = mlen + BYTES(NORX_T);
+; 292  :     *clen = mlen + BYTES(NORX_T);
 
 	mov	eax, DWORD PTR _clen$[ebp]
 	add	esp, 72					; 00000048H
@@ -1073,7 +953,7 @@ _norx_aead_encrypt PROC					; COMDAT
 	mov	DWORD PTR [eax], esi
 	pop	esi
 
-; 304  : }
+; 293  : }
 
 	leave
 	ret	0
@@ -1083,9 +963,8 @@ PUBLIC	_norx_aead_decrypt
 ; Function compile flags: /Ogspy
 ;	COMDAT _norx_aead_decrypt
 _TEXT	SEGMENT
-_state$ = -96						; size = 64
-_tag$ = -32						; size = 16
-_k$ = -16						; size = 16
+_state$ = -80						; size = 64
+_tag$ = -16						; size = 16
 _m$ = 8							; size = 4
 _mlen$ = 12						; size = 4
 _a$ = 16						; size = 4
@@ -1098,52 +977,42 @@ _nonce$ = 40						; size = 4
 _key$ = 44						; size = 4
 _norx_aead_decrypt PROC					; COMDAT
 
-; 314  : {
+; 303  : {
 
 	push	ebp
 	mov	ebp, esp
-	sub	esp, 96					; 00000060H
-	push	ebx
+	sub	esp, 80					; 00000050H
+	push	edi
 
-; 315  :     unsigned char k[BYTES(NORX_K)];
-; 316  :     unsigned char tag[BYTES(NORX_T)];
-; 317  :     norx_state_t state;
-; 318  :     int result = -1;
-; 319  : 
-; 320  :     if (clen < BYTES(NORX_T)) {
+; 304  :     unsigned char tag[BYTES(NORX_T)];
+; 305  :     norx_state_t state;
+; 306  :     int result = -1;
+; 307  : 
+; 308  :     if (clen < BYTES(NORX_T)) {
 
-	mov	ebx, DWORD PTR _clen$[ebp]
-	push	16					; 00000010H
-	pop	ecx
-	cmp	ebx, ecx
+	mov	edi, DWORD PTR _clen$[ebp]
+	cmp	edi, 16					; 00000010H
 	jae	SHORT $LN1@norx_aead_
 
-; 321  :         return -1;
+; 309  :         return -1;
 
 	or	eax, -1
 	jmp	SHORT $LN2@norx_aead_
 $LN1@norx_aead_:
+	push	ebx
 	push	esi
 
-; 322  :     }
-; 323  : 
-; 324  :     memcpy(k, key, sizeof(k));
-
-	mov	esi, DWORD PTR _key$[ebp]
-	push	edi
-
-; 325  :     norx_init(state, k, nonce);
+; 310  :     }
+; 311  : 
+; 312  :     norx_init(state, key, nonce);
 
 	push	DWORD PTR _nonce$[ebp]
-	lea	eax, DWORD PTR _k$[ebp]
-	push	eax
 	lea	eax, DWORD PTR _state$[ebp]
-	lea	edi, DWORD PTR _k$[ebp]
+	push	DWORD PTR _key$[ebp]
 	push	eax
-	rep movsb
 	call	_norx_init
 
-; 326  :     norx_absorb_data(state, a, alen, HEADER_TAG);
+; 313  :     norx_absorb_data(state, a, alen, HEADER_TAG);
 
 	push	1
 	push	DWORD PTR _alen$[ebp]
@@ -1152,18 +1021,18 @@ $LN1@norx_aead_:
 	push	eax
 	call	_norx_absorb_data
 
-; 327  :     norx_decrypt_data(state, m, c, clen - BYTES(NORX_T));
+; 314  :     norx_decrypt_data(state, m, c, clen - BYTES(NORX_T));
 
-	mov	edi, DWORD PTR _c$[ebp]
-	lea	esi, DWORD PTR [ebx-16]
+	mov	ebx, DWORD PTR _c$[ebp]
+	lea	esi, DWORD PTR [edi-16]
 	push	esi
-	push	edi
+	push	ebx
 	push	DWORD PTR _m$[ebp]
 	lea	eax, DWORD PTR _state$[ebp]
 	push	eax
 	call	_norx_decrypt_data
 
-; 328  :     norx_absorb_data(state, z, zlen, TRAILER_TAG);
+; 315  :     norx_absorb_data(state, z, zlen, TRAILER_TAG);
 
 	push	4
 	push	DWORD PTR _zlen$[ebp]
@@ -1172,41 +1041,40 @@ $LN1@norx_aead_:
 	push	eax
 	call	_norx_absorb_data
 
-; 329  :     norx_finalise(state, tag, k);
+; 316  :     norx_finalise(state, tag, key);
 
-	lea	eax, DWORD PTR _k$[ebp]
-	push	eax
+	push	DWORD PTR _key$[ebp]
 	lea	eax, DWORD PTR _tag$[ebp]
 	push	eax
 	lea	eax, DWORD PTR _state$[ebp]
 	push	eax
 	call	_norx_finalise
 
-; 330  :     *mlen = clen - BYTES(NORX_T);
+; 317  :     *mlen = clen - BYTES(NORX_T);
 
 	mov	eax, DWORD PTR _mlen$[ebp]
 	mov	DWORD PTR [eax], esi
 	add	esp, 72					; 00000048H
 
-; 331  : 
-; 332  :     result = norx_verify_tag(c + clen - BYTES(NORX_T), tag);
+; 318  : 
+; 319  :     result = norx_verify_tag(c + clen - BYTES(NORX_T), tag);
 
 	lea	eax, DWORD PTR _tag$[ebp]
 	push	eax
 
-; 333  :     return result;
+; 320  :     return result;
 
-	lea	eax, DWORD PTR [edi+ebx-16]
+	lea	eax, DWORD PTR [ebx+edi-16]
 	push	eax
 	call	_norx_verify_tag
 	pop	ecx
 	pop	ecx
-	pop	edi
 	pop	esi
-$LN2@norx_aead_:
 	pop	ebx
+$LN2@norx_aead_:
+	pop	edi
 
-; 334  : }
+; 321  : }
 
 	leave
 	ret	0

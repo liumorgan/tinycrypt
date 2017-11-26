@@ -1,18 +1,32 @@
-/*
- * NORX reference source code package - reference C implementations
- *
- * Written 2014-2016 by:
- *
- *      - Samuel Neves <sneves@dei.uc.pt>
- *      - Philipp Jovanovic <philipp@jovanovic.io>
- *
- * To the extent possible under law, the author(s) have dedicated all copyright
- * and related and neighboring rights to this software to the public domain
- * worldwide. This software is distributed without any warranty.
- *
- * You should have received a copy of the CC0 Public Domain Dedication along with
- * this software. If not, see <http://creativecommons.org/publicdomain/zero/1.0/>.
- */
+/**
+  Copyright © 2017 Odzhan. All Rights Reserved.
+
+  Redistribution and use in source and binary forms, with or without
+  modification, are permitted provided that the following conditions are
+  met:
+
+  1. Redistributions of source code must retain the above copyright
+  notice, this list of conditions and the following disclaimer.
+
+  2. Redistributions in binary form must reproduce the above copyright
+  notice, this list of conditions and the following disclaimer in the
+  documentation and/or other materials provided with the distribution.
+
+  3. The name of the author may not be used to endorse or promote products
+  derived from this software without specific prior written permission.
+
+  THIS SOFTWARE IS PROVIDED BY AUTHORS "AS IS" AND ANY EXPRESS OR
+  IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED
+  WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE
+  DISCLAIMED. IN NO EVENT SHALL THE AUTHOR BE LIABLE FOR ANY DIRECT,
+  INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES
+  (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR
+  SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION)
+  HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT,
+  STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN
+  ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
+  POSSIBILITY OF SUCH DAMAGE. */
+  
 #include <stddef.h>
 #include <stdlib.h>
 #include <string.h>
@@ -30,6 +44,9 @@
 #define NORX_B (NORX_W * 16)     /* Permutation width */
 #define NORX_C (NORX_W *  4)     /* Capacity */
 #define NORX_R (NORX_B - NORX_C) /* Rate */
+
+#define NORX_D 0
+#define NORX_E 1
 
 #if NORX_W == 32 /* NORX32 specific */
 
@@ -96,56 +113,29 @@ void norx_permute(norx_state_t state)
     }
 }
 
-void norx_pad(uint8_t *out, const uint8_t *in, const size_t inlen)
-{
-    memset(out, 0, BYTES(NORX_R));
-    memcpy(out, in, inlen);
-    
-    out[inlen] = 0x01;
-    out[BYTES(NORX_R) - 1] |= 0x80;
-}
-
 void norx_absorb_block(norx_state_t state, 
-  const norx_word_t * in, size_t inlen, tag_t tag)
+  norx_word_t *out, norx_word_t * in, 
+  size_t inlen, tag_t tag)
 {
     size_t i;
     norx_word_t * S = state->S;
-    uint8_t lastblock[BYTES(NORX_R)];
-    uint32_t *p=(uint32_t*)in;
+    norx_word_t block[BYTES(NORX_R)];
     
-    if (inlen < BYTES(NORX_R)) {
-      norx_pad(lastblock, (uint8_t*)in, inlen);
-      p=(uint32_t*)lastblock;
-    }
     S[15] ^= tag;
     norx_permute(state);
 
-    for (i = 0; i < WORDS(NORX_R); ++i) {
-        S[i] ^= p[i];
-    }
-}
-
-void norx_encrypt_block(norx_state_t state, 
-  norx_word_t *out, const norx_word_t * in, int inlen)
-{
-    size_t i;
-    norx_word_t * S = state->S;
-    uint8_t block[BYTES(NORX_R)];
-    uint32_t *p=(uint32_t*)in;
+    memset(block, 0, sizeof(block));
+    memcpy(block, in, inlen);
     
     if (inlen < BYTES(NORX_R)) {
-      norx_pad(block, (uint8_t*)in, inlen);
-      p=(uint32_t*)block;
+      ((uint8_t*)block)[inlen] = 0x01;
+      ((uint8_t*)block)[BYTES(NORX_R) - 1] |= 0x80;
     }
     
-    S[15] ^= PAYLOAD_TAG;
-    norx_permute(state);
-
-    for (i=0; i<WORDS(NORX_R); i++) {
-      S[i] ^= p[i];
+    for (i = 0; i < WORDS(NORX_R); ++i) {
+        S[i] ^= block[i];
     }
-    memcpy(out, S, inlen);
-    
+    if (tag==PAYLOAD_TAG) memcpy(out, S, inlen);
 }
 
 void norx_decrypt_block(norx_state_t state, 
@@ -154,6 +144,7 @@ void norx_decrypt_block(norx_state_t state,
     size_t      i;
     norx_word_t *S = state->S;
     norx_word_t block[BYTES(NORX_R)];
+    norx_word_t t;
     
     S[15] ^= PAYLOAD_TAG;
     norx_permute(state);
@@ -166,10 +157,10 @@ void norx_decrypt_block(norx_state_t state,
       ((uint8_t*)block)[BYTES(NORX_R) - 1] ^= 0x80;
     }
     
-    for (i = 0; i < WORDS(NORX_R); ++i) {
-        const norx_word_t c = block[i];
-        block[i] = S[i] ^ c;
-        S[i] = c;
+    for (i=0; i<WORDS(NORX_R); i++) {
+      t = block[i];  
+      block[i] ^= S[i];
+      S[i] = t;
     }
     memcpy(out, block, len);
 }
@@ -208,7 +199,7 @@ void norx_absorb_data(norx_state_t state,
     
     while (inlen) {
       len = MIN(inlen, BYTES(NORX_R));
-      norx_absorb_block(state, (norx_word_t*)in, len, tag);
+      norx_absorb_block(state, 0, (norx_word_t*)in, len, tag);
       
       inlen -= len;
       in += len;
@@ -222,7 +213,7 @@ void norx_encrypt_data(norx_state_t state,
     
     while (inlen) {
       len = MIN(inlen, BYTES(NORX_R));
-      norx_encrypt_block(state, (norx_word_t*)out, (norx_word_t*)in, len);
+      norx_absorb_block(state, (norx_word_t*)out, (norx_word_t*)in, len, PAYLOAD_TAG);
       
       inlen -= len;
       in    += len;
@@ -291,15 +282,13 @@ void norx_aead_encrypt(
   const unsigned char *key
 )
 {
-    unsigned char k[BYTES(NORX_K)];
     norx_state_t state;
 
-    memcpy(k, key, sizeof(k));
-    norx_init(state, k, nonce);
+    norx_init(state, key, nonce);
     norx_absorb_data(state, a, alen, HEADER_TAG);
     norx_encrypt_data(state, c, m, mlen);
     norx_absorb_data(state, z, zlen, TRAILER_TAG);
-    norx_finalise(state, c + mlen, k);
+    norx_finalise(state, c + mlen, key);
     *clen = mlen + BYTES(NORX_T);
 }
 
@@ -312,7 +301,6 @@ int norx_aead_decrypt(
   const unsigned char *key
 )
 {
-    unsigned char k[BYTES(NORX_K)];
     unsigned char tag[BYTES(NORX_T)];
     norx_state_t state;
     int result = -1;
@@ -321,12 +309,11 @@ int norx_aead_decrypt(
         return -1;
     }
 
-    memcpy(k, key, sizeof(k));
-    norx_init(state, k, nonce);
+    norx_init(state, key, nonce);
     norx_absorb_data(state, a, alen, HEADER_TAG);
     norx_decrypt_data(state, m, c, clen - BYTES(NORX_T));
     norx_absorb_data(state, z, zlen, TRAILER_TAG);
-    norx_finalise(state, tag, k);
+    norx_finalise(state, tag, key);
     *mlen = clen - BYTES(NORX_T);
 
     result = norx_verify_tag(c + clen - BYTES(NORX_T), tag);
