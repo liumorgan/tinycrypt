@@ -113,7 +113,7 @@ static NORX_INLINE void store64(void * out, const uint64_t v)
 }
 
 
-static void* (* const volatile burn)(void*, int, size_t) = memset;
+//static void* (* const volatile burn)(void*, int, size_t) = memset;
 
 #endif
 
