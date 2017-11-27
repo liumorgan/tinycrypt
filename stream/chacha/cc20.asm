@@ -24,74 +24,66 @@ _cc20_stream PROC					; COMDAT
 ; 84   : {
 
 	push	ebx
-	push	esi
 
-; 85   :     int i, j;
+; 85   :     int i;
 ; 86   : 
 ; 87   :     // copy state to x
-; 88   :     for (i=0; i<16; i++) { 
+; 88   :     memcpy(x->b, c->s.b, 64);
 
-	mov	esi, DWORD PTR _x$[esp+4]
-	mov	ecx, esi
-	push	edi
-	mov	edi, DWORD PTR _c$[esp+8]
-	mov	ebx, edi
-	push	16					; 00000010H
-	sub	ebx, esi
-	pop	edx
-$LL18@cc20_strea:
-
-; 89   :       x->w[i] = c->s.w[i];
-
-	mov	eax, DWORD PTR [ebx+ecx]
-	mov	DWORD PTR [ecx], eax
-	lea	ecx, DWORD PTR [ecx+4]
-	sub	edx, 1
-	jne	SHORT $LL18@cc20_strea
-
-; 90   :     }
-; 91   :     // apply 20 rounds
-; 92   :     for (i=0; i<20; i+=2) {
-
+	mov	ebx, DWORD PTR _x$[esp]
 	push	ebp
-	push	10					; 0000000aH
-	pop	ebp
-$LL7@cc20_strea:
-
-; 93   :       F(x->w);
-
+	mov	ebp, DWORD PTR _c$[esp+4]
 	push	esi
+	push	edi
+	push	16					; 00000010H
+	pop	ecx
+	mov	esi, ebp
+	mov	edi, ebx
+	rep movsd
+	push	10					; 0000000aH
+	pop	esi
+$LL4@cc20_strea:
+
+; 89   :     // apply 20 rounds
+; 90   :     for (i=0; i<20; i+=2) {
+; 91   :       F(x->w);
+
+	push	ebx
 	call	_F
 	pop	ecx
-	sub	ebp, 1
-	jne	SHORT $LL7@cc20_strea
+	sub	esi, 1
+	jne	SHORT $LL4@cc20_strea
+
+; 92   :     }
+; 93   :     // add state to x
+; 94   :     for (i=0; i<16; i++) {
+
+	mov	ecx, ebp
 	push	16					; 00000010H
-	pop	ecx
-	pop	ebp
-$LL20@cc20_strea:
+	sub	ecx, ebx
+	pop	edx
+$LL13@cc20_strea:
 
-; 94   :     }
-; 95   :     // add state to x
-; 96   :     for (i=0; i<16; i++) {
-; 97   :       x->w[i] += c->s.w[i];
+; 95   :       x->w[i] += c->s.w[i];
 
-	mov	eax, DWORD PTR [esi+ebx]
-	add	DWORD PTR [esi], eax
-	lea	esi, DWORD PTR [esi+4]
-	sub	ecx, 1
-	jne	SHORT $LL20@cc20_strea
+	mov	eax, DWORD PTR [ecx+ebx]
+	add	DWORD PTR [ebx], eax
+	lea	ebx, DWORD PTR [ebx+4]
+	sub	edx, 1
+	jne	SHORT $LL13@cc20_strea
 
-; 98   :     }
-; 99   :     // update block counter
-; 100  :     c->s.w[12]++;
+; 96   :     }
+; 97   :     // update block counter
+; 98   :     c->s.w[12]++;
 
-	inc	DWORD PTR [edi+48]
+	inc	DWORD PTR [ebp+48]
 	pop	edi
 	pop	esi
+	pop	ebp
 	pop	ebx
 
-; 101  :     // stopping at 2^70 bytes per nonce is user's responsibility
-; 102  : }
+; 99   :     // stopping at 2^70 bytes per nonce is user's responsibility
+; 100  : }
 
 	ret	0
 _cc20_stream ENDP
@@ -228,16 +220,16 @@ _in$ = 12						; size = 4
 _ctx$ = 16						; size = 4
 _cc20_encrypt PROC					; COMDAT
 
-; 106  : {
+; 104  : {
 
 	sub	esp, 64					; 00000040H
 	push	esi
 
-; 107  :     uint32_t i, r;
-; 108  :     cc20_blk stream;
-; 109  :     uint8_t  *p=(uint8_t*)in;
-; 110  :     
-; 111  :     while (len) {      
+; 105  :     uint32_t i, r;
+; 106  :     cc20_blk stream;
+; 107  :     uint8_t  *p=(uint8_t*)in;
+; 108  :     
+; 109  :     while (len) {      
 
 	mov	esi, DWORD PTR _len$[esp+64]
 	push	edi
@@ -250,7 +242,7 @@ _cc20_encrypt PROC					; COMDAT
 	pop	ebx
 $LL2@cc20_encry:
 
-; 112  :       cc20_stream(ctx, &stream);
+; 110  :       cc20_stream(ctx, &stream);
 
 	lea	eax, DWORD PTR _stream$[esp+80]
 	push	eax
@@ -259,16 +251,16 @@ $LL2@cc20_encry:
 	pop	ecx
 	pop	ecx
 
-; 113  :       
-; 114  :       r=(len>64) ? 64 : len;
+; 111  :       
+; 112  :       r=(len>64) ? 64 : len;
 
 	cmp	esi, ebx
 	mov	ecx, esi
 	cmova	ecx, ebx
 
-; 115  :       
-; 116  :       // xor input with stream
-; 117  :       for (i=0; i<r; i++) {
+; 113  :       
+; 114  :       // xor input with stream
+; 115  :       for (i=0; i<r; i++) {
 
 	test	ecx, ecx
 	je	SHORT $LN5@cc20_encry
@@ -278,7 +270,7 @@ $LL2@cc20_encry:
 	mov	ebp, ecx
 $LL12@cc20_encry:
 
-; 118  :         p[i] ^= stream.b[i];
+; 116  :         p[i] ^= stream.b[i];
 
 	mov	al, BYTE PTR [ebx+edx]
 	xor	BYTE PTR [edx], al
@@ -289,10 +281,10 @@ $LL12@cc20_encry:
 	pop	ebx
 $LN5@cc20_encry:
 
-; 119  :       }
-; 120  :     
-; 121  :       len -= r;
-; 122  :       p += r;
+; 117  :       }
+; 118  :     
+; 119  :       len -= r;
+; 120  :       p += r;
 
 	add	edi, ecx
 	sub	esi, ecx
@@ -303,8 +295,8 @@ $LN3@cc20_encry:
 	pop	edi
 	pop	esi
 
-; 123  :     }
-; 124  : }
+; 121  :     }
+; 122  : }
 
 	add	esp, 64					; 00000040H
 	ret	0

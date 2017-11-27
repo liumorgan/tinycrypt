@@ -82,12 +82,10 @@ void F(uint32_t s[16])
 // generate stream of bytes
 void cc20_stream (cc20_ctx *c, cc20_blk *x)
 {
-    int i, j;
+    int i;
 
     // copy state to x
-    for (i=0; i<16; i++) { 
-      x->w[i] = c->s.w[i];
-    }
+    memcpy(x->b, c->s.b, 64);
     // apply 20 rounds
     for (i=0; i<20; i+=2) {
       F(x->w);

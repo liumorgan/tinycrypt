@@ -101,6 +101,7 @@ int main (void) {
   w512_t     s, k;
   w512_t     *m;
   
+  memcpy(pt, input, 64);
   memcpy(k.b, key, 32); // init key
   memcpy(&k.b[32], nonce, 12); // init nonce
   
