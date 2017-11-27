@@ -70,7 +70,7 @@ void F(uint32_t s[16])
       
       /* The quarter-round */
       do {
-        s[a] = s[a] + s[b]; 
+        s[a]+= s[b]; 
         s[d] = ROTL32(s[d] ^ s[a], r & 0xFF);
         XCHG(c, a);
         XCHG(d, b);

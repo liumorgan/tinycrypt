@@ -1,5 +1,6 @@
 
 #include "norx.h"
+#include <stdio.h>
 
 // norx 32-4 test vector
 char tv32[]=
