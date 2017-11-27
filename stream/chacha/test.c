@@ -105,8 +105,8 @@ int main (void) {
   memcpy(&k.b[32], nonce, 12); // init nonce
   
   // setup 256-bit key
-  //cc20_setkeyx (&ctx, key, nonce);
-  xchacha20 (0, &k, &s);
+  cc20_setkey (&ctx, key, nonce);
+  //xchacha20 (0, &k, &s);
 
   printf ("\ncounter = %08x %08x\n", 
     s.w[13], s.w[12]);
@@ -117,8 +117,8 @@ int main (void) {
   }
   
   printf ("\nencrypting block\n");  
-  //cc20_encryptx (64, input, &ctx);
-  xchacha20(64, input, &s);
+  cc20_encrypt (64, input, &ctx);
+  //xchacha20(64, input, &s);
 
   printf ("\ncounter = %08x %08x\n", 
     s.w[13], s.w[12]);
