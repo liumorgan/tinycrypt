@@ -33,6 +33,26 @@ typedef struct norx_state__
     norx_word_t S[16];
 } norx_state_t[1];
 
+typedef struct _norx_ctx_t {
+  uint8_t *a;
+  size_t alen;
+  
+  uint8_t *c;
+  size_t clen;
+  
+  uint8_t *k;
+  
+  uint8_t *m;
+  size_t mlen;
+  
+  uint8_t *n;
+  
+  uint8_t *z;
+  size_t zlen;
+  
+  norx_word_t S[16];
+} norx_ctx;
+
 typedef enum tag__
 {
     HEADER_TAG  = 0x01,

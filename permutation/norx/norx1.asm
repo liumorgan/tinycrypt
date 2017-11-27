@@ -871,213 +871,177 @@ $LL3@norx_verif:
 	ret	0
 _norx_verify_tag ENDP
 _TEXT	ENDS
-PUBLIC	_norx_aead_encrypt
+PUBLIC	_norx_aead_encryptx
 ; Function compile flags: /Ogspy
-;	COMDAT _norx_aead_encrypt
+;	COMDAT _norx_aead_encryptx
 _TEXT	SEGMENT
 _state$ = -64						; size = 64
 _c$ = 8							; size = 4
-_clen$ = 12						; size = 4
-_a$ = 16						; size = 4
-_alen$ = 20						; size = 4
-_m$ = 24						; size = 4
-_mlen$ = 28						; size = 4
-_z$ = 32						; size = 4
-_zlen$ = 36						; size = 4
-_nonce$ = 40						; size = 4
-_key$ = 44						; size = 4
-_norx_aead_encrypt PROC					; COMDAT
+_norx_aead_encryptx PROC				; COMDAT
 
-; 284  : {
+; 277  : {
 
 	push	ebp
 	mov	ebp, esp
 	sub	esp, 64					; 00000040H
 	push	esi
-	push	edi
 
-; 285  :     norx_state_t state;
-; 286  : 
-; 287  :     norx_init(state, key, nonce);
+; 278  :     norx_state_t state;
+; 279  : 
+; 280  :     norx_init(state, c->k, c->n);
 
-	push	DWORD PTR _nonce$[ebp]
+	mov	esi, DWORD PTR _c$[ebp]
+	push	DWORD PTR [esi+28]
 	lea	eax, DWORD PTR _state$[ebp]
-	push	DWORD PTR _key$[ebp]
+	push	DWORD PTR [esi+16]
 	push	eax
 	call	_norx_init
 
-; 288  :     norx_absorb_data(state, a, alen, HEADER_TAG);
+; 281  :     norx_absorb_data(state, c->a, c->alen, HEADER_TAG);
 
 	push	1
-	push	DWORD PTR _alen$[ebp]
+	push	DWORD PTR [esi+4]
 	lea	eax, DWORD PTR _state$[ebp]
-	push	DWORD PTR _a$[ebp]
+	push	DWORD PTR [esi]
 	push	eax
 	call	_norx_absorb_data
 
-; 289  :     norx_encrypt_data(state, c, m, mlen);
+; 282  :     norx_encrypt_data(state, c->c, c->m, c->mlen);
 
-	mov	esi, DWORD PTR _mlen$[ebp]
-	mov	edi, DWORD PTR _c$[ebp]
-	push	esi
-	push	DWORD PTR _m$[ebp]
+	push	DWORD PTR [esi+24]
 	lea	eax, DWORD PTR _state$[ebp]
-	push	edi
+	push	DWORD PTR [esi+20]
+	push	DWORD PTR [esi+8]
 	push	eax
 	call	_norx_encrypt_data
 
-; 290  :     norx_absorb_data(state, z, zlen, TRAILER_TAG);
+; 283  :     norx_absorb_data(state, c->z, c->zlen, TRAILER_TAG);
 
 	push	4
-	push	DWORD PTR _zlen$[ebp]
+	push	DWORD PTR [esi+36]
 	lea	eax, DWORD PTR _state$[ebp]
-	push	DWORD PTR _z$[ebp]
+	push	DWORD PTR [esi+32]
 	push	eax
 	call	_norx_absorb_data
 
-; 291  :     norx_finalise(state, c + mlen, key);
+; 284  :     norx_finalise(state, c->c + c->mlen, c->k);
 
-	push	DWORD PTR _key$[ebp]
-	add	edi, esi
+	mov	eax, DWORD PTR [esi+24]
+	push	DWORD PTR [esi+16]
+	add	eax, DWORD PTR [esi+8]
+	push	eax
 	lea	eax, DWORD PTR _state$[ebp]
-	push	edi
 	push	eax
 	call	_norx_finalise
 
-; 292  :     *clen = mlen + BYTES(NORX_T);
+; 285  :     c->clen = c->mlen + BYTES(NORX_T);
 
-	mov	eax, DWORD PTR _clen$[ebp]
+	mov	eax, DWORD PTR [esi+24]
 	add	esp, 72					; 00000048H
-	add	esi, 16					; 00000010H
-	pop	edi
-	mov	DWORD PTR [eax], esi
+	add	eax, 16					; 00000010H
+	mov	DWORD PTR [esi+12], eax
 	pop	esi
 
-; 293  : }
+; 286  : }
 
 	leave
 	ret	0
-_norx_aead_encrypt ENDP
+_norx_aead_encryptx ENDP
 _TEXT	ENDS
-PUBLIC	_norx_aead_decrypt
+PUBLIC	_norx_aead_decryptx
 ; Function compile flags: /Ogspy
-;	COMDAT _norx_aead_decrypt
+;	COMDAT _norx_aead_decryptx
 _TEXT	SEGMENT
 _state$ = -80						; size = 64
 _tag$ = -16						; size = 16
-_m$ = 8							; size = 4
-_mlen$ = 12						; size = 4
-_a$ = 16						; size = 4
-_alen$ = 20						; size = 4
-_c$ = 24						; size = 4
-_clen$ = 28						; size = 4
-_z$ = 32						; size = 4
-_zlen$ = 36						; size = 4
-_nonce$ = 40						; size = 4
-_key$ = 44						; size = 4
-_norx_aead_decrypt PROC					; COMDAT
+_c$ = 8							; size = 4
+_norx_aead_decryptx PROC				; COMDAT
 
-; 303  : {
+; 289  : {
 
 	push	ebp
 	mov	ebp, esp
 	sub	esp, 80					; 00000050H
-	push	edi
-
-; 304  :     unsigned char tag[BYTES(NORX_T)];
-; 305  :     norx_state_t state;
-; 306  :     int result = -1;
-; 307  : 
-; 308  :     if (clen < BYTES(NORX_T)) {
-
-	mov	edi, DWORD PTR _clen$[ebp]
-	cmp	edi, 16					; 00000010H
-	jae	SHORT $LN1@norx_aead_
-
-; 309  :         return -1;
-
-	or	eax, -1
-	jmp	SHORT $LN2@norx_aead_
-$LN1@norx_aead_:
-	push	ebx
 	push	esi
 
-; 310  :     }
-; 311  : 
-; 312  :     norx_init(state, key, nonce);
+; 290  :     uint8_t tag[BYTES(NORX_T)];
+; 291  :     norx_state_t state;
+; 292  :     int result = -1;
+; 293  : 
+; 294  :     norx_init(state, c->k, c->n);
 
-	push	DWORD PTR _nonce$[ebp]
+	mov	esi, DWORD PTR _c$[ebp]
+	push	DWORD PTR [esi+28]
 	lea	eax, DWORD PTR _state$[ebp]
-	push	DWORD PTR _key$[ebp]
+	push	DWORD PTR [esi+16]
 	push	eax
 	call	_norx_init
 
-; 313  :     norx_absorb_data(state, a, alen, HEADER_TAG);
+; 295  :     norx_absorb_data(state, c->a, c->alen, HEADER_TAG);
 
 	push	1
-	push	DWORD PTR _alen$[ebp]
+	push	DWORD PTR [esi+4]
 	lea	eax, DWORD PTR _state$[ebp]
-	push	DWORD PTR _a$[ebp]
+	push	DWORD PTR [esi]
 	push	eax
 	call	_norx_absorb_data
 
-; 314  :     norx_decrypt_data(state, m, c, clen - BYTES(NORX_T));
+; 296  :     norx_decrypt_data(state, c->m, c->c, c->clen - BYTES(NORX_T));
 
-	mov	ebx, DWORD PTR _c$[ebp]
-	lea	esi, DWORD PTR [edi-16]
-	push	esi
-	push	ebx
-	push	DWORD PTR _m$[ebp]
+	mov	eax, DWORD PTR [esi+12]
+	sub	eax, 16					; 00000010H
+	push	eax
+	push	DWORD PTR [esi+8]
 	lea	eax, DWORD PTR _state$[ebp]
+	push	DWORD PTR [esi+20]
 	push	eax
 	call	_norx_decrypt_data
 
-; 315  :     norx_absorb_data(state, z, zlen, TRAILER_TAG);
+; 297  :     norx_absorb_data(state, c->z, c->zlen, TRAILER_TAG);
 
 	push	4
-	push	DWORD PTR _zlen$[ebp]
+	push	DWORD PTR [esi+36]
 	lea	eax, DWORD PTR _state$[ebp]
-	push	DWORD PTR _z$[ebp]
+	push	DWORD PTR [esi+32]
 	push	eax
 	call	_norx_absorb_data
 
-; 316  :     norx_finalise(state, tag, key);
+; 298  :     norx_finalise(state, tag, c->k);
 
-	push	DWORD PTR _key$[ebp]
+	push	DWORD PTR [esi+16]
 	lea	eax, DWORD PTR _tag$[ebp]
 	push	eax
 	lea	eax, DWORD PTR _state$[ebp]
 	push	eax
 	call	_norx_finalise
 
-; 317  :     *mlen = clen - BYTES(NORX_T);
+; 299  :     c->mlen = c->clen - BYTES(NORX_T);
 
-	mov	eax, DWORD PTR _mlen$[ebp]
-	mov	DWORD PTR [eax], esi
+	mov	eax, DWORD PTR [esi+12]
+	lea	ecx, DWORD PTR [eax-16]
+	mov	DWORD PTR [esi+24], ecx
 	add	esp, 72					; 00000048H
 
-; 318  : 
-; 319  :     result = norx_verify_tag(c + clen - BYTES(NORX_T), tag);
+; 300  : 
+; 301  :     result = norx_verify_tag(c->c + c->clen - BYTES(NORX_T), tag);
 
-	lea	eax, DWORD PTR _tag$[ebp]
-	push	eax
+	lea	ecx, DWORD PTR _tag$[ebp]
+	push	ecx
 
-; 320  :     return result;
+; 302  :     return result;
 
-	lea	eax, DWORD PTR [ebx+edi-16]
+	mov	ecx, DWORD PTR [esi+8]
+	lea	eax, DWORD PTR [ecx+eax-16]
 	push	eax
 	call	_norx_verify_tag
 	pop	ecx
 	pop	ecx
 	pop	esi
-	pop	ebx
-$LN2@norx_aead_:
-	pop	edi
 
-; 321  : }
+; 303  : }
 
 	leave
 	ret	0
-_norx_aead_decrypt ENDP
+_norx_aead_decryptx ENDP
 _TEXT	ENDS
 END

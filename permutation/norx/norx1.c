@@ -240,7 +240,6 @@ void norx_finalise(norx_state_t state,
   unsigned char * tag, const unsigned char * key)
 {
     norx_word_t * S = state->S;
-    uint32_t lastblock[BYTES(NORX_C)];
     norx_word_t *k=(norx_word_t*)key;
     size_t i;
     
@@ -254,9 +253,7 @@ void norx_finalise(norx_state_t state,
 
     for (i=0; i<4; i++) S[i+12] ^= k[i];
 
-    for (i=0; i<4; i++) lastblock[i] = S[i+12];
-
-    memcpy(tag, lastblock, BYTES(NORX_T));
+    memcpy(tag, S[i+12], BYTES(NORX_T));
 }
 
 /* Verify tags in constant time: 0 for success, -1 for fail */
@@ -273,49 +270,33 @@ int norx_verify_tag(const unsigned char * tag1, const unsigned char * tag2)
 }
 
 /* High-level operations */
-void norx_aead_encrypt(
-  unsigned char *c, size_t *clen,
-  const unsigned char *a, size_t alen,
-  const unsigned char *m, size_t mlen,
-  const unsigned char *z, size_t zlen,
-  const unsigned char *nonce,
-  const unsigned char *key
-)
+void norx_aead_encryptx(norx_ctx *c)
 {
     norx_state_t state;
 
-    norx_init(state, key, nonce);
-    norx_absorb_data(state, a, alen, HEADER_TAG);
-    norx_encrypt_data(state, c, m, mlen);
-    norx_absorb_data(state, z, zlen, TRAILER_TAG);
-    norx_finalise(state, c + mlen, key);
-    *clen = mlen + BYTES(NORX_T);
+    norx_init(state, c->k, c->n);
+    norx_absorb_data(state, c->a, c->alen, HEADER_TAG);
+    norx_encrypt_data(state, c->c, c->m, c->mlen);
+    norx_absorb_data(state, c->z, c->zlen, TRAILER_TAG);
+    norx_finalise(state, c->c + c->mlen, c->k);
+    
+    c->clen = c->mlen + BYTES(NORX_T);
 }
 
-int norx_aead_decrypt(
-  unsigned char *m, size_t *mlen,
-  const unsigned char *a, size_t alen,
-  const unsigned char *c, size_t clen,
-  const unsigned char *z, size_t zlen,
-  const unsigned char *nonce,
-  const unsigned char *key
-)
+int norx_aead_decryptx(norx_ctx *c)
 {
-    unsigned char tag[BYTES(NORX_T)];
+    uint8_t tag[BYTES(NORX_T)];
     norx_state_t state;
     int result = -1;
 
-    if (clen < BYTES(NORX_T)) {
-        return -1;
-    }
+    norx_init(state, c->k, c->n);
+    norx_absorb_data(state, c->a, c->alen, HEADER_TAG);
+    norx_decrypt_data(state, c->m, c->c, c->clen - BYTES(NORX_T));
+    norx_absorb_data(state, c->z, c->zlen, TRAILER_TAG);
+    norx_finalise(state, tag, c->k);
+    
+    c->mlen = c->clen - BYTES(NORX_T);
 
-    norx_init(state, key, nonce);
-    norx_absorb_data(state, a, alen, HEADER_TAG);
-    norx_decrypt_data(state, m, c, clen - BYTES(NORX_T));
-    norx_absorb_data(state, z, zlen, TRAILER_TAG);
-    norx_finalise(state, tag, key);
-    *mlen = clen - BYTES(NORX_T);
-
-    result = norx_verify_tag(c + clen - BYTES(NORX_T), tag);
+    result = norx_verify_tag(c->c + c->clen - BYTES(NORX_T), tag);
     return result;
 }
