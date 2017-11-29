@@ -68,14 +68,13 @@
     #error "Invalid word size!"
 #endif
 
-/* The non-linear primitive */
-// same as addition without using modular ADD
+// The non-linear primitive
 #define H(A, B) ( ( (A) ^ (B) ) ^ ( ( (A) & (B) ) << 1) )
 
 void F(norx_word_t s[16])
 {
     int         i;
-    uint32_t    a, b, c, d, r, t, idx;
+    norx_word_t a, b, c, d, r, t, idx;
     
     uint16_t idx16[8]=
     { 0xC840, 0xD951, 0xEA62, 0xFB73,    // column index
@@ -89,9 +88,9 @@ void F(norx_word_t s[16])
       c = ((idx >>  8) & 0xF);
       d = ((idx >> 12) & 0xF);
   
-      r = 0x1F100B08;
+      r = 0x1F100B08; // rotation offsets
       
-      /* The quarter-round */
+      // The quarter-round
       do {
         s[a] = H(s[a], s[b]); 
         s[d] = ROTR(s[d] ^ s[a], r & 0xFF);
