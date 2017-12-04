@@ -165,10 +165,10 @@ void norx_decrypt_block(norx_state_t state,
 }
 
 /* Low-level operations */
-void norx_init(norx_state_t state, const unsigned char *key, const unsigned char *nonce)
+void norx_init(norx_state_t state, const uint8_t *key, const uint8_t *nonce)
 {
-    norx_word_t * S = state->S;
-    size_t i;
+    norx_word_t *S = state->S;
+    size_t      i;
     norx_word_t *k=(norx_word_t*)key;
     norx_word_t *n=(norx_word_t*)nonce;
     
@@ -192,7 +192,7 @@ void norx_init(norx_state_t state, const unsigned char *key, const unsigned char
 }
 
 void norx_absorb_data(norx_state_t state, 
-  const unsigned char * in, size_t inlen, tag_t tag)
+  const uint8_t * in, size_t inlen, tag_t tag)
 {
     int len;
     
@@ -206,7 +206,7 @@ void norx_absorb_data(norx_state_t state,
 }
 
 void norx_encrypt_data(norx_state_t state, 
-  unsigned char *out, const unsigned char * in, size_t inlen)
+  uint8_t *out, const uint8_t * in, size_t inlen)
 {
     int len;
     
@@ -221,7 +221,7 @@ void norx_encrypt_data(norx_state_t state,
 }
 
 void norx_decrypt_data(norx_state_t state, 
-  unsigned char *out, const unsigned char * in, size_t inlen)
+  uint8_t *out, const uint8_t * in, size_t inlen)
 {
     int len;
     
@@ -236,9 +236,9 @@ void norx_decrypt_data(norx_state_t state,
 }
 
 void norx_finalise(norx_state_t state, 
-  unsigned char * tag, const unsigned char * key)
+  uint8_t *tag, const uint8_t *key)
 {
-    norx_word_t * S = state->S;
+    norx_word_t *S = state->S;
     norx_word_t *k=(norx_word_t*)key;
     size_t i;
     
@@ -256,13 +256,13 @@ void norx_finalise(norx_state_t state,
 }
 
 /* Verify tags in constant time: 0 for success, -1 for fail */
-int norx_verify_tag(const unsigned char * tag1, const unsigned char * tag2)
+int norx_verify_tag(const uint8_t *tag1, const uint8_t *tag2)
 {
-    size_t i;
-    unsigned acc = 0;
+    size_t   i;
+    uint32_t acc = 0;
 
-    for (i = 0; i < BYTES(NORX_T); ++i) {
-        acc |= tag1[i] ^ tag2[i];
+    for (i=0; i<BYTES(NORX_T); i++) {
+      acc |= tag1[i] ^ tag2[i];
     }
 
     return (((acc - 1) >> 8) & 1) - 1;
@@ -284,9 +284,9 @@ void norx_aead_encryptx(norx_ctx *c)
 
 int norx_aead_decryptx(norx_ctx *c)
 {
-    uint8_t tag[BYTES(NORX_T)];
+    uint8_t      tag[BYTES(NORX_T)];
     norx_state_t state;
-    int result = -1;
+    int          result = -1;
 
     norx_init(state, c->k, c->n);
     norx_absorb_data(state, c->a, c->alen, HEADER_TAG);

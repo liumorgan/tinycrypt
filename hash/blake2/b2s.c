@@ -30,34 +30,42 @@
 #include "b2s.h"
 
 // G mixing function
-void b2s_g(uint32_t *x, uint16_t idx, 
-    uint32_t x0, uint32_t x1) 
+void G(uint32_t *x, uint32_t *m, uint64_t sigma) 
 {
-    uint32_t a, b, c, d;
+    uint32_t a, b, c, d, i, j, idx;
+    // work vector indices
+    uint16_t idx16[8]=
+    { 0xC840, 0xD951, 0xEA62, 0xFB73, 
+      0xFA50, 0xCB61, 0xD872, 0xE943 };
+      
+    for (i=0; i<8; i++) {  
+      idx = idx16[i];
+      
+      a = (idx         & 0xF);
+      b = ((idx >>  4) & 0xF);
+      c = ((idx >>  8) & 0xF);
+      d = ((idx >> 12) & 0xF);
 
-    a = (idx         & 0xF);
-    b = ((idx >>  4) & 0xF);
-    c = ((idx >>  8) & 0xF);
-    d = ((idx >> 12) & 0xF);
+      x[a] += x[b] + m[sigma & 15]; 
+      x[d] = ROTR32(x[d] ^ x[a], 16);
 
-    x[a] += x[b] + x0; 
-    x[d] = ROTR32(x[d] ^ x[a], 16);
+      x[c] += x[d]; 
+      x[b] = ROTR32(x[b] ^ x[c], 12);
 
-    x[c] += x[d]; 
-    x[b] = ROTR32(x[b] ^ x[c], 12);
+      x[a] += x[b] + m[(sigma >> 4) & 15]; 
+      x[d] = ROTR32(x[d] ^ x[a],  8);
 
-    x[a] += x[b] + x1; 
-    x[d] = ROTR32(x[d] ^ x[a],  8);
-
-    x[c] += x[d]; 
-    x[b] = ROTR32(x[b] ^ x[c],  7);
+      x[c] += x[d]; 
+      x[b] = ROTR32(x[b] ^ x[c],  7);
+      
+      sigma >>= 8;
+    }
 }
 
 // F compression function
-void b2s_compress (b2s_ctx *c, int last)
+void F(b2s_ctx *c, int last)
 {
     uint32_t  i, j, x0, x1;
-    uint64_t  x;
     blake_blk v, m;
     
     // initialization vectors
@@ -65,11 +73,6 @@ void b2s_compress (b2s_ctx *c, int last)
     { 0x6A09E667, 0xBB67AE85, 0x3C6EF372, 0xA54FF53A,
       0x510E527F, 0x9B05688C, 0x1F83D9AB, 0x5BE0CD19 };
       
-    // work vector indices
-    uint16_t idx16[8]=
-    { 0xC840, 0xD951, 0xEA62, 0xFB73, 
-      0xFA50, 0xCB61, 0xD872, 0xE943 };
-
     // permutations
     uint64_t sigma64[10] = 
     { 0xfedcba9876543210, 0x357b20c16df984ae,
@@ -85,27 +88,17 @@ void b2s_compress (b2s_ctx *c, int last)
     }
     
     // copy message x into m
-    for (i=0; i<BLAKE2s_CBLOCK/4; i++) {
-      m.w[i] = c->x.w[i];
-    }
+    memcpy(m.b, c->x.b, 64);
 
     // xor v with current length
     v.w[12] ^= c->len.w[0];
     v.w[13] ^= c->len.w[1];
     
     // if this is last block, invert word 14
-    if (last) {
-      v.w[14] = ~v.w[14];
-    }
-
+    v.w[14] ^= -last;
+    
     for (i=0; i<10; i++) {
-      x = sigma64[i%10];
-      // 8 mixing
-      for (j=0; j<8; j++) {
-        x0 = (x & 15); x >>= 4;
-        x1 = (x & 15); x >>= 4;
-        b2s_g(&v.w[0], idx16[j], m.w[x0], m.w[x1]);
-      }
+      G(v.w, m.w, sigma64[i%10]);
     }
     // update s with v
     for (i=0; i<BLAKE2s_LBLOCK; i++) {
@@ -126,23 +119,21 @@ void b2s_init (b2s_ctx *c, uint32_t outlen,
     
     // outlen can't be zero or exceed 32 bytes
     outlen=(outlen==0 || outlen>32) ? 32 : outlen;
+    
     // keylen can't exceed 32 bytes
     keylen=(keylen>32)  ? 32 : keylen;
-    
+
+    // set x to zero
+    memset(c, 0, sizeof(b2s_ctx));
+
     // initialize s iv
-    for (i=0; i<8; i++) {
-      c->s.w[i] = b2s_iv[i];
-    }
+    memcpy(&c->s, b2s_iv, sizeof(b2s_iv));
+
     // update s with keylen and outlen
     c->s.w[0] ^= 0x01010000 ^ 
               (keylen << 8) ^ 
               outlen;
-
-    // set x to zero
-    for (i=0; i<16; i++) {
-      c->x.w[i] = 0;
-    }
-    
+   
     // set length to zero
     c->len.q  = 0;
     // if key used, set idx to 64
@@ -150,9 +141,7 @@ void b2s_init (b2s_ctx *c, uint32_t outlen,
     c->outlen = outlen;
 
     // copy optional key
-    for (i=0; i<keylen; i++) {
-      c->x.b[i] = ((uint8_t*)key)[i];
-    }
+    memcpy(c->x.b, key, keylen);
 }
 
 // update context
@@ -168,7 +157,7 @@ void b2s_update (b2s_ctx *c,
     for (i=0; i<len; i++) {
       if (c->idx==64) {
         c->len.q += c->idx;
-        b2s_compress (c, 0);
+        F(c, 0);
         c->idx = 0;
       }
       c->x.b[c->idx++] = p[i];      
@@ -184,15 +173,11 @@ void b2s_final (void* out, b2s_ctx *c)
     c->len.q += c->idx;
     
     // zero remainder of x
-    while (c->idx < 64) {
-      c->x.b[c->idx++] = 0;
-    }
+    memset(&c->x.b[c->idx], 0, 64 - c->idx);
 
     // compress last block
-    b2s_compress (c, 1);
+    F(c, 1);
 
     // copy s to output
-    for (i=0; i<c->outlen; i++) {
-      ((uint8_t*)out)[i] = c->s.b[i];
-    }
+    memcpy(out, c->s.b, c->outlen);
 }
