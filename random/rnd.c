@@ -29,41 +29,41 @@ void bin2hex(const char *s, uint8_t x[], int len) {
 #ifdef NIX
 int random(void *out, size_t outlen)
 {
-	int     f;
-  ssize_t  u=0, len;
-  uint8_t *p=(uint8_t*)out;
-  
-	f = open("/dev/urandom", O_RDONLY);
-	if (f >= 0) {
-		for (u=0; u<outlen;) {
-			len = read(f, p + u, outlen - u);
-			if (len<0) {
-				if (errno == EINTR) {
-					continue;
-				}
-				break;
-			}
-			u += (size_t)len;
-		}
-		close(f);
-	}
-	return u==outlen;
+    int     f;
+    ssize_t  u=0, len;
+    uint8_t *p=(uint8_t*)out;
+    
+    f = open("/dev/urandom", O_RDONLY);
+    if (f >= 0) {
+      for (u=0; u<outlen;) {
+        len = read(f, p + u, outlen - u);
+        if (len<0) {
+          if (errno == EINTR) {
+            continue;
+          }
+          break;
+        }
+        u += (size_t)len;
+      }
+      close(f);
+    }
+    return u==outlen;
 }
 
 #else
   
 int random(void *out, size_t outlen)
 {
-	HCRYPTPROV hp;
-	BOOL       r=FALSE;
-    
-	if (CryptAcquireContext(&hp, 0, 0, PROV_RSA_FULL,
-		CRYPT_VERIFYCONTEXT | CRYPT_SILENT))
-	{
-		r = CryptGenRandom(hp, outlen, out);
-		CryptReleaseContext(hp, 0);
-	}
-	return r;
+    HCRYPTPROV hp;
+    BOOL       r=FALSE;
+      
+    if (CryptAcquireContext(&hp, 0, 0, PROV_RSA_FULL,
+      CRYPT_VERIFYCONTEXT | CRYPT_SILENT))
+    {
+      r = CryptGenRandom(hp, outlen, out);
+      CryptReleaseContext(hp, 0);
+    }
+    return r;
 }
 
 #endif
