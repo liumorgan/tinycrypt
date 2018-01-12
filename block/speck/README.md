@@ -54,5 +54,3 @@ See bld64.bat for example of how to compile.
 
 [@m0dexp](https://www.twitter.com/m0dexp "Follow me on Twitter")
  
-1/12/2018 - fixed some bugs 
-3/9/2017 8:20:36 AM  
