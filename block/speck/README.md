@@ -22,12 +22,12 @@ The functions with 'x' at the end is setkey/encrypt combined in one call.
 
 - **spk64.asm**
 
-x86 assembly code based on **speck64.c** using 32-bit stdcall convention
+x86 assembly code based on **speck64.c** using 32-bit stdcall convention.<br>
 See bld32.bat for example of how to compile.
 
 - **spk128.asm**
 
-x86-64 assembly based on **speck128.c** using Microsoft fastcall convention.
+x86-64 assembly based on **speck128.c** using Microsoft fastcall convention.<br>
 See bld64.bat for example of how to compile.
  
 ## Code Sizes ##
