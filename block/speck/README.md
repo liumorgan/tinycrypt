@@ -2,6 +2,8 @@
 
 **SPECK block cipher**
 
+The functions with 'x' at the end is setkey/encrypt combined in one call.
+
 - **speck64.c**
 
 64-bit block size, 128-bit keys
@@ -20,11 +22,13 @@
 
 - **spk64.asm**
 
-x86 assembly code based on **speck64.c** using stdcall convention
+x86 assembly code based on **speck64.c** using 32-bit stdcall convention
+See bld32.bat for example of how to compile.
 
 - **spk128.asm**
 
 x86-64 assembly based on **speck128.c** using Microsoft fastcall convention.
+See bld64.bat for example of how to compile.
  
 ## Code Sizes ##
 
@@ -48,6 +52,7 @@ x86-64 assembly based on **speck128.c** using Microsoft fastcall convention.
 
 ## Author ##
 
-[@odzhancode](https://www.twitter.com/odzhancode "Follow me on Twitter")
+[@m0dexp](https://www.twitter.com/m0dexp "Follow me on Twitter")
  
+1/12/2018 - fixed some bugs 
 3/9/2017 8:20:36 AM  

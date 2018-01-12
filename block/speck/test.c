@@ -108,19 +108,28 @@ int main (void)
     print_bytes("CT", tv[i].cipher, tv[i].blocklen);
 
     if (tv[i].blocklen == 4)
-    {      
+    {
+      #ifndef SINGLE      
       speck32_setkey (tv[i].key, subkeys);
       speck32_encrypt (subkeys, SPECK_ENCRYPT, buf);
-      //speck32_encryptx (tv[i].key, buf);    
+      #else
+      speck32_encryptx (tv[i].key, buf);  
+      #endif    
     } else if (tv[i].blocklen == 8)
     {      
+      #ifndef SINGLE
       speck64_setkey (tv[i].key, subkeys);
       speck64_encrypt (subkeys, SPECK_ENCRYPT, buf);
-      //speck64_encryptx (tv[i].key, buf);
+      #else
+      speck64_encryptx (tv[i].key, buf);
+      #endif
     } else {
+      #ifndef SINGLE
       speck128_setkey (tv[i].key, subkeys);
-      speck128_encrypt (SPECK_ENCRYPT, buf, subkeys);
-      //speck128_encryptx(tv[i].key, buf);
+      speck128_encrypt (subkeys, SPECK_ENCRYPT, buf);
+      #else
+      speck128_encryptx(tv[i].key, buf);
+      #endif
     }
     
     equ = memcmp(tv[i].cipher, buf, tv[i].blocklen)==0;
@@ -128,6 +137,7 @@ int main (void)
     printf ("\nEncryption %s\n", equ ? "OK" : "FAILED");
     print_bytes("CT", buf, tv[i].blocklen);
     
+    #ifndef SINGLE
     if (tv[i].blocklen == 4)
     {      
       speck32_setkey (tv[i].key, subkeys);
@@ -138,13 +148,14 @@ int main (void)
       speck64_encrypt (subkeys, SPECK_DECRYPT, buf);
     } else {
       speck128_setkey (tv[i].key, subkeys);
-      speck128_encrypt (SPECK_DECRYPT, buf, subkeys);
+      speck128_encrypt (subkeys, SPECK_DECRYPT, buf);
     }    
     
     equ = memcmp(tv[i].plain, buf, tv[i].blocklen)==0;
     
     printf ("\nDecryption %s\n", equ ? "OK" : "FAILED");
     print_bytes("PT", buf, tv[i].blocklen);
+    #endif
   }
   return 0;
 }

@@ -31,94 +31,84 @@
 
 #ifndef SINGLE
 
-void speck128_setkey(
-    const void *in, 
-    void *out)
+void speck128_setkey(const void *in, void *out)
 {
-  uint64_t i, t, k0, k1, k2, k3;
-
-  // copy 256-bit key to local space
-  k0 = ((uint64_t*)in)[0];
-  k1 = ((uint64_t*)in)[1];
-  k2 = ((uint64_t*)in)[2];
-  k3 = ((uint64_t*)in)[3];
-
-  // expand 256-bit key into round keys
-  for (i=0; i<34; i++)
-  {
-    ((uint64_t*)out)[i] = k0;
+    uint64_t i, t, k0, k1, k2, k3;
+    uint64_t *k=(uint64_t*)in;
+    uint64_t *ks=(uint64_t*)out;
     
-    k1 = (ROTR64(k1, 8) + k0) ^ i;
-    k0 = ROTL64(k0,  3) ^ k1;
-    
-    // rotate left 64-bits
-    XCHG(k3, k2);
-    XCHG(k3, k1);
-  }
+    // copy 256-bit key to local space
+    k0 = k[0]; k1 = k[1];
+    k2 = k[2]; k3 = k[3];
+
+    // expand 256-bit key into round keys
+    for (i=0; i<34; i++)
+    {
+      ks[i] = k0;
+      
+      k1 = (ROTR64(k1, 8) + k0) ^ i;
+      k0 = ROTL64(k0, 3) ^ k1;
+      
+      // rotate left 32-bits
+      XCHG(k3, k2);
+      XCHG(k3, k1);
+    }
 }
 
-void speck128_encrypt(
-    int enc, 
-    void *in,
-    const void *keys)
+void speck128_encrypt(const void *keys, int enc, void *data)
 {
-  uint64_t i;
-  uint64_t *ks=(uint64_t*)keys;
-  
-  // copy input to local space
-  uint64_t x = ((uint64_t*)in)[0];
-  uint64_t y = ((uint64_t*)in)[1];
-  
-  for (i=0; i<34; i++)
-  {
-    if (enc == SPECK_DECRYPT)
+    uint64_t i, x0, x1;
+    uint64_t *ks=(uint64_t*)keys;
+    uint64_t *x=(uint64_t*)data;
+    
+    // copy 128-bit input to local space
+    x0=x[0]; x1=x[1];
+    
+    for (i=0; i<34; i++)
     {
-      x = ROTR64(x  ^ y, 3);
-      y = ROTL64((y ^ ks[34-1-i]) - x, 8);        
-    } else {
-      y = (ROTR64(y, 8) + x) ^ ks[i];
-      x = ROTL64(x, 3)  ^ y;
+      if (enc==SPECK_DECRYPT)
+      {
+        x0 = ROTR64(x0 ^ x1, 3);
+        x1 = ROTL64((x1 ^ ks[34-1-i]) - x0, 8);        
+      } else {
+        x1 = (ROTR64(x1, 8) + x0) ^ ks[i];
+        x0 = ROTL64(x0, 3) ^ x1;
+      }
     }
-  }
-  // save result
-  ((uint64_t*)in)[0] = x;
-  ((uint64_t*)in)[1] = y;
+    // save result
+    x[0] = x0; x[1] = x1;
 }
 
 #else
 
-void speck128_encryptx(
-    const void *key, 
-    void *in)
+void speck128_encryptx(const void *key, void *data)
 {
-  uint64_t i, t, k0, k1, k2, k3, x0, x1;
-  
-  // copy 256-bit key to local space
-  k0 = ((uint64_t*)key)[0];
-  k1 = ((uint64_t*)key)[1];
-  k2 = ((uint64_t*)key)[2];
-  k3 = ((uint64_t*)key)[3];
-  
-  // copy input to local space
-  x0 = ((uint64_t*)in)[0];
-  x1 = ((uint64_t*)in)[1];
-  
-  for (i=0; i<34; i++)
-  {
-    // encrypt block
-    x1 = (ROTR64(x1, 8) + x0) ^ k0;
-    x0 =  ROTL64(x0, 3) ^ x1;
+    uint64_t i, t, k0, k1, k2, k3, x0, x1;
+    uint64_t *x=(uint64_t*)data;
+    uint64_t *k=(uint64_t*)key;
     
-    // create next subkey
-    k1 = (ROTR64(k1, 8) + k0) ^ i;
-    k0 =  ROTL64(k0, 3) ^ k1;
+    // copy 256-bit key to local space
+    k0 = k[0]; k1 = k[1];
+    k2 = k[2]; k3 = k[3];
+    
+    // copy input to local space
+    x0 = x[0]; x1 = x[1];
+    
+    for (i=0; i<34; i++)
+    {
+      // encrypt block
+      x1 = (ROTR64(x1, 8) + x0) ^ k0;
+      x0 =  ROTL64(x0, 3) ^ x1;
+      
+      // create next subkey
+      k1 = (ROTR64(k1, 8) + k0) ^ i;
+      k0 =  ROTL64(k0, 3) ^ k1;
 
-    XCHG(k3, k2);
-    XCHG(k3, k1);    
-  }
-  // save result
-  ((uint64_t*)in)[0] = x0;
-  ((uint64_t*)in)[1] = x1;
+      XCHG(k3, k2);
+      XCHG(k3, k1);    
+    }
+    // save result
+    x[0] = x0; x[1] = x1;
 }
 
 #endif

@@ -57,27 +57,30 @@ speck128_setkey:
     push   rdi
     push   rsi   
 
-    mov    k0, [rcx   ]      ; k0 = key[0]
-    mov    k1, [rcx+ 8]      ; k1 = key[1]
-    mov    k2, [rcx+16]      ; k2 = key[2]
-    mov    k3, [rcx+24]      ; k3 = key[3]
+    ; load 256-bit key
+    mov    k0, [rcx   ]      ; k0 = k[0]
+    mov    k1, [rcx+ 8]      ; k1 = k[1]
+    mov    k2, [rcx+16]      ; k2 = k[2]
+    mov    k3, [rcx+24]      ; k3 = k[3]
 
     xor    ecx, ecx
 spk_sk:
-    ; ((uint32_t*)ks)[i] = k0;
-    mov    [rdx+rax*8], k0
-    ; k1 = (ROTR32(k1, 8) + k0) ^ i;
+    ; ((uint64_t*)ks)[i] = k0;
+    mov    [rdx+rcx*8], k0
+    ; k1 = (ROTR64(k1, 8) + k0) ^ i;
     ror    k1, 8
     add    k1, k0
     xor    k1, rcx
-    ; k0 = ROTL32(k0, 3) ^ k1;
+    ; k0 = ROTL64(k0, 3) ^ k1;
     rol    k0, 3
-    xor    k0, k1    
+    xor    k0, k1   
+    ; XCHG(k3, k2);
     xchg   k3, k2
+    ; XCHG(k3, k1);
     xchg   k3, k1
     ; i++
     inc    cl
-    cmp    cl, SPECK_RNDS    
+    cmp    cl, 34    
     jnz    spk_sk   
     
     pop    rsi
@@ -93,35 +96,40 @@ speck128_encrypt:
     push   rdi
     push   rsi
     
-    push   rdx               ; save in
-    mov    x0, [rdx  ]       ; x0 = in[0]
-    mov    x1, [rdx+8]       ; x1 = in[1] 
+    push   r8               ; save data
+    push   rcx
+    pop    rdi              ; rdi = ks
+    
+    mov    x0, [r8  ]       ; x0 = x[0]
+    mov    x1, [r8+8]       ; x1 = x[1] 
 
-    test   ecx, ecx          ; enc == SPECK_ENCRYPT
-    mov    cl, SPECK_RNDS
+    push   34
+    pop    rcx
+    test   edx, edx          ; enc == SPECK_ENCRYPT
     jz     spk_e0
 spk_d0:
-    ; x0 = ROTR32(x0 ^ x1, 3);
+    ; x0 = ROTR64(x0 ^ x1, 3);
     xor    x0, x1
     ror    x0, 3
-    ; x1 = ROTL32((x1 ^ ks[SPECK_RNDS-1-i]) - x0, 8);
-    xor    x1, [r8+8*rcx-8]
+    ; x1 = ROTL64((x1 ^ ks[34-1-i]) - x0, 8);
+    xor    x1, [rdi+8*rcx-8]
     sub    x1, x0
     rol    x1, 8
     loop   spk_d0
     jmp    spk_end    
 spk_e0:
-    ; x1 = (ROTR32(x1, 8) + x0) ^ ks[i];
+    ; x1 = (ROTR64(x1, 8) + x0) ^ ks[i];
     ror    x1, 8
     add    x1, x0
-    xor    x1, [r8]
-    add    r8, 8
-    ; x0 = ROTL32(x0, 3) ^ x1;
+    xor    x1, [rdi]
+    scasq
+    ; x0 = ROTL64(x0, 3) ^ x1;
     rol    x0, 3
     xor    x0, x1
     loop   spk_e0
 spk_end:
-    pop    rdi             ; restore in
+    pop    rdi             ; restore data
+    ; save 128-bit result
     mov    [rdi  ], x0
     mov    [rdi+8], x1  
     
@@ -159,8 +167,8 @@ speck128_encryptx:
     mov    k3, [rcx+24]      ; k3 = key[3]
     
     push   rdx
-    mov    x0, [rdx  ]       ; x0 = in[0]
-    mov    x1, [rdx+8]       ; x1 = in[1] 
+    mov    x0, [rdx  ]       ; x0 = data[0]
+    mov    x1, [rdx+8]       ; x1 = data[1] 
     
     xor    ecx, ecx          ; i = 0
 spk_el:
@@ -184,10 +192,11 @@ spk_el:
     xchg   k3, k1
     ; i++
     inc    cl
-    cmp    cl, SPECK_RNDS    
+    cmp    cl, 34    
     jnz    spk_el
     
     pop    rax
+    ; save 128-bit result
     mov    [rax  ], x0
     mov    [rax+8], x1
     

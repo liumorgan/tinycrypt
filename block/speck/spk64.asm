@@ -81,7 +81,7 @@ spk_sk:
     xchg   k3, k1
     ; i++
     inc    ecx
-    cmp    cl, SPECK_RNDS    
+    cmp    cl, 27    
     jnz    spk_sk   
     popad
     ret
@@ -105,13 +105,13 @@ _speck64_encrypt:
     lodsd
     xchg   eax, x1
     test   ecx, ecx
-    mov    cl, SPECK_RNDS
+    mov    cl, 27
     jz     spk_e0
 spk_d0:
     ; x1 = ROTR32(x1 ^ x0, 3);
     xor    x1, x0
     ror    x1, 3
-    ; x0 = ROTL32((x0 ^ ks[SPECK_RNDS-1-i]) - x1, 8);
+    ; x0 = ROTL32((x0 ^ ks[27-1-i]) - x1, 8);
     xor    x0, [edi+4*ecx-4]
     sub    x0, x1
     rol    x0, 8
