@@ -38,7 +38,7 @@ void cham128_setkey(void *in, void *out)
 
     for (i=0; i<KW; i++) {
       rk[i] = k[i] ^ ROTL32(k[i], 1) ^ ROTL32(k[i], 8);
-      rk[(i + KW) ^ 1]	= k[i] ^ ROTL32(k[i], 1) ^ ROTL32(k[i], 11);
+      rk[(i + KW) ^ 1] = k[i] ^ ROTL32(k[i], 1) ^ ROTL32(k[i], 11);
     }
 }
 
@@ -57,14 +57,14 @@ void cham128_encrypt(void *keys, void *data)
     for (i=0; i<R; i++)
     {
       if ((i & 1) == 0) {
-        t = ROTL32((x0 ^ i) + (ROTL32(x1, 1) ^ rk[i & 7]), 8);
+        x0 = ROTL32((x0 ^ i) + (ROTL32(x1, 1) ^ rk[i & 7]), 8);
       } else {
-        t = ROTL32((x0 ^ i) + (ROTL32(x1, 8) ^ rk[i & 7]), 1);
-      }   
-      x0 = x1; x1 = x2;
-      x2 = x3; x3 = t;
+        x0 = ROTL32((x0 ^ i) + (ROTL32(x1, 8) ^ rk[i & 7]), 1);
+      }
+      XCHG(x0, x1);
+      XCHG(x1, x2);
+      XCHG(x2, x3);
     }
-
     x[0] = x0; x[1] = x1;
     x[2] = x2; x[3] = x3;
 }

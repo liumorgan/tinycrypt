@@ -47,7 +47,9 @@ extern "C" {
 #endif
 
   void cham128_setkey(void*, void*);
+  void cham128_setkeyx(void*, void*);
   void cham128_encrypt(void*, void*);
+  void cham128_encryptx(void*, void*);
   void cham128_decrypt(void*, void*);
 
 #ifdef __cplusplus
