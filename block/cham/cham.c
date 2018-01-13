@@ -83,13 +83,14 @@ void cham128_decrypt(void *keys, void *data)
 
     for (i = R-1; i >=0 ; i--)
     {
-      t = x3; x3 = x2;
-      x2 = x1; x1 = x0;
+      XCHG(x2, x3);      
+      XCHG(x1, x2);
+      XCHG(x0, x1);
       
       if ((i & 1) == 0) {
-        x0 = (ROTR32(t, 8) - ((ROTL32(x1, 1) ^ rk[i & 7]))) ^ i;
+        x0 = (ROTR32(x0, 8) - ((ROTL32(x1, 1) ^ rk[i & 7]))) ^ i;
       } else {
-        x0 = (ROTR32(t, 1) - ((ROTL32(x1, 8) ^ rk[i & 7]))) ^ i;
+        x0 = (ROTR32(x0, 1) - ((ROTL32(x1, 8) ^ rk[i & 7]))) ^ i;
       }
     }
     x[0] = x0; x[1] = x1;
