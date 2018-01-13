@@ -30,11 +30,11 @@
 #include "cham.h"
 
 // initialize sub keys
-void cham128_setkey(void *input, void *output)
+void cham128_setkey(void *in, void *out)
 {
     int i;
-    uint32_t *k=(uint32_t*)input;
-    uint32_t *rk=(uint32_t*)output;
+    uint32_t *k=(uint32_t*)in;
+    uint32_t *rk=(uint32_t*)out;
 
     for (i=0; i<KW; i++) {
       rk[i] = k[i] ^ ROTL32(k[i], 1) ^ ROTL32(k[i], 8);
@@ -56,10 +56,10 @@ void cham128_encrypt(void *keys, void *data)
 
     for (i=0; i<R; i++)
     {
-      if (i % 2 == 0) {
-        t = ROTL32((x0 ^ i) + (ROTL32(x1, 1) ^ rk[i % (2*KW)]), 8);
+      if ((i & 1) == 0) {
+        t = ROTL32((x0 ^ i) + (ROTL32(x1, 1) ^ rk[i & 7]), 8);
       } else {
-        t = ROTL32((x0 ^ i) + (ROTL32(x1, 8) ^ rk[i % (2*KW)]), 1);
+        t = ROTL32((x0 ^ i) + (ROTL32(x1, 8) ^ rk[i & 7]), 1);
       }   
       x0 = x1; x1 = x2;
       x2 = x3; x3 = t;
@@ -86,10 +86,10 @@ void cham128_decrypt(void *keys, void *data)
       t = x3; x3 = x2;
       x2 = x1; x1 = x0;
       
-      if (i % 2 == 0) {
-        x0 = (ROTR32(t, 8) - ((ROTL32(x1, 1) ^ rk[i % (2 * KW)]))) ^ i;
+      if ((i & 1) == 0) {
+        x0 = (ROTR32(t, 8) - ((ROTL32(x1, 1) ^ rk[i & 7]))) ^ i;
       } else {
-        x0 = (ROTR32(t, 1) - ((ROTL32(x1, 8) ^ rk[i % (2 * KW)]))) ^ i;
+        x0 = (ROTR32(t, 1) - ((ROTL32(x1, 8) ^ rk[i & 7]))) ^ i;
       }
     }
     x[0] = x0; x[1] = x1;
