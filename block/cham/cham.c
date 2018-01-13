@@ -67,7 +67,7 @@ void cham128_encrypt(void *keys, void *data)
 
     x[0] = x0; x[1] = x1;
     x[2] = x2; x[3] = x3;
-};
+}
 
 // decrypt 128-bits
 void cham128_decrypt(void *keys, void *data)
@@ -94,5 +94,4 @@ void cham128_decrypt(void *keys, void *data)
     }
     x[0] = x0; x[1] = x1;
     x[2] = x2; x[3] = x3;
-
 }
