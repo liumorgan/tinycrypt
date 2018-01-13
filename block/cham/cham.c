@@ -69,7 +69,7 @@ void cham128_encrypt(void *keys, void *data)
     x[2] = x2; x[3] = x3;
 };
 
-
+// decrypt 128-bits
 void cham128_decrypt(void *keys, void *data)
 {
     int i;
@@ -83,10 +83,8 @@ void cham128_decrypt(void *keys, void *data)
 
     for (i = R-1; i >=0 ; i--)
     {
-      t = x3;
-      x3 = x2;
-      x2 = x1;
-      x1 = x0;
+      t = x3; x3 = x2;
+      x2 = x1; x1 = x0;
       
       if (i % 2 == 0) {
         x0 = (ROTR32(t, 8) - ((ROTL32(x1, 1) ^ rk[i % (2 * KW)]))) ^ i;
