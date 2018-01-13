@@ -28,6 +28,7 @@ int main()
   memcpy(buf, plain, 16);
 
 	cham128_setkey(key, subkeys);
+  //print_bytes("subkeys", subkeys, 2*KW*4);
 	cham128_encrypt(subkeys, buf);
   equ = memcmp(buf, cipher, 16)==0;
   printf("Encryption %s\n", equ ? "OK" : "FAILED");
