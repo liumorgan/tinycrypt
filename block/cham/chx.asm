@@ -30,7 +30,7 @@
 ; -----------------------------------------------
 ; CHAM-128/128 block cipher in x86 assembly
 ;
-; size: 130 bytes
+; size: 128 bytes
 ;
 ; global calls use cdecl convention
 ;
@@ -73,7 +73,7 @@ sk_l0:
     lea    ebx, [eax+KW]
     xor    ebx, 1
     mov    [edi+ebx*4], edx ; rk[(i + KW) ^ 1] = edx
-    inc    al
+    inc    eax
     cmp    al, KW
     jnz    sk_l0    
     popad
