@@ -128,7 +128,7 @@ enc_l2:
     xchg   x2, x3          ; XCHG(x2, x3);
     
     pop    eax      ; restore i
-    inc    al       ; i++
+    inc    eax      ; i++
     cmp    al, R    ; i<R
     jnz    enc_l1
     
